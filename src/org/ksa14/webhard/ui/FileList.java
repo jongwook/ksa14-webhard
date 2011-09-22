@@ -13,7 +13,7 @@ public class FileList extends JTable {
 	public static final long serialVersionUID = 0L;
 	
 	// TODO consider moving this part to a separate resource file
-	public static final String columns[] = {"ÀÌ¸§", "Å©±â", "Á¾·ù", "³¯Â¥"};
+	public static final String columns[] = {"ì´ë¦„", "í¬ê¸°", "ì¢…ë¥˜", "ë‚ ì§œ"};
 	public static final Object rows[][] = {};
 
 	/**
