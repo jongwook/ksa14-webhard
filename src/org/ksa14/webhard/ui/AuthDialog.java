@@ -4,9 +4,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
 import org.ksa14.webhard.sftp.*;
 
 public class AuthDialog extends JDialog {
@@ -15,7 +15,8 @@ public class AuthDialog extends JDialog {
 	public static final int wHeight = 200;
 	
 	private JTextField TextID;
-	private JTextField TextPW;
+	private JPasswordField TextPW;
+	private JButton BtnConnect;
 	
 	private BufferedImage ImgLogo;
 	
@@ -52,17 +53,26 @@ public class AuthDialog extends JDialog {
 		TextID.setColumns(20);
 		this.add(TextID);
 		
-		TextPW = new JTextField();
+		TextPW = new JPasswordField();
 		TextPW.setBounds(260, 67, 155, 21);
 		TextPW.setColumns(20);
+		TextPW.addKeyListener(new KeyAdapter() {
+			public void keyTyped(KeyEvent e) {
+				if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+					Authed = RequestAuth(TextID.getText(), new String(TextPW.getPassword()));
+					if (Authed)
+						dispose();
+				}
+			}
+		});
 		this.add(TextPW);
 		
 		// Add buttons to connect or exit
-		JButton BtnConnect = new JButton("접속");
+		BtnConnect = new JButton("접속");
 		BtnConnect.setBounds(270, 110, 60, 25);
 		BtnConnect.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Authed = RequestAuth(TextID.getText(), TextPW.getText());
+			public void actionPerformed(ActionEvent e) {
+				Authed = RequestAuth(TextID.getText(), new String(TextPW.getPassword()));
 				if (Authed)
 					dispose();
 			}
@@ -72,7 +82,7 @@ public class AuthDialog extends JDialog {
 		JButton BtnExit = new JButton("종료");
 		BtnExit.setBounds(350, 110, 60, 25);
 		BtnExit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
 				Authed = false;
 				dispose();
 			}
@@ -106,6 +116,16 @@ public class AuthDialog extends JDialog {
 	
 	public boolean RequestAuth(String id, String pw) {
 		// TODO : Code for authenticating
+		if ((id.trim().length() == 0) || (pw.trim().length() == 0)) {
+			JOptionPane.showMessageDialog(null, "학번과 비밀번호를 입력해주세요", "KSA14 Webhard Login", JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+		
+		if (!Sftp.Connect(id, pw)) {
+			JOptionPane.showMessageDialog(null, "접속에 실패했습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		
 		return true;
 	}
 }
