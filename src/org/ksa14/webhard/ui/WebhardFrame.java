@@ -10,6 +10,8 @@ import javax.swing.*;
  */
 public class WebhardFrame extends JFrame{
 	public static final long serialVersionUID=0L;
+	public static final int wWidth = 800;
+	public static final int wHeight = 600;
 	
 	/**
 	 * Initialize the main webhard window. 
@@ -25,8 +27,13 @@ public class WebhardFrame extends JFrame{
 		// Make the process terminate when the window is closed 
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		// Set the default window size
-		this.setSize(new Dimension(800,600));
+		// Set the default window size and location
+		int sW = (int)getToolkit().getScreenSize().getWidth();
+		int sH = (int)getToolkit().getScreenSize().getHeight();
+		int wW = Math.min(sW, wWidth);
+		int wH = Math.min(sH, wHeight);
+		this.setSize(wW, wH);
+		this.setLocation((sW - wW) / 2, (sH - wH) / 2);
 		
 		// Set the background color
 		this.getContentPane().setBackground(Color.lightGray);

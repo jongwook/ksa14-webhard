@@ -22,6 +22,6 @@ public class DirectoryTree extends JTree {
 	public DirectoryTree() {
 		top = new DefaultMutableTreeNode("KSA14 Webhard");
 		
-		this.setPreferredSize(new Dimension(200,600));
+		this.setPreferredSize(new Dimension(200, 600));
 	}
 }
