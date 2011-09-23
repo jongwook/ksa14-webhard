@@ -14,14 +14,13 @@ public class AuthDialog extends JDialog {
 	private JTextField TextID;
 	private JPasswordField TextPW;
 	private static boolean Authed = false;
-	private SftpUtil Sftp;
 	
-	public static boolean Authenticate(SftpUtil su) {
-		new AuthDialog(su);
+	public static boolean Authenticate() {
+		new AuthDialog();
 		return Authed;
 	}
 
-	public AuthDialog(SftpUtil su) {
+	public AuthDialog() {
 		// Set absolute layout
 		this.setLayout(null);
 
@@ -102,9 +101,6 @@ public class AuthDialog extends JDialog {
 		this.setLocation((sW - wWidth) / 2, (sH - wHeight) / 2);
 		this.setResizable(false);
 		
-		// Sftp utility
-		this.Sftp = su;
-		
 		// Show window
 		this.setVisible(true);
 	}
@@ -116,7 +112,7 @@ public class AuthDialog extends JDialog {
 			return false;
 		}
 		
-		if (!Sftp.Connect(id, pw)) {			
+		if (!SftpUtil.Connect(id, pw)) {
 			JOptionPane.showMessageDialog(null, "접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}

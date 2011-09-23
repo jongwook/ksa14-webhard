@@ -12,9 +12,9 @@ public class SftpUtil {
 	public static final String Username = "apache";
 	public static final String Host = "webhard.ksa14.org";
 
-	private JSch SUJsch;
-	private Session SUSession;
-	private Channel SUChannel;
+	private static JSch SUJsch;
+	private static Session SUSession;
+	private static Channel SUChannel;
 	
 	private static String md5(String input) {
 		try {
@@ -48,10 +48,7 @@ public class SftpUtil {
 		}
 	}
 	
-	public SftpUtil() {		
-	}
-	
-	public boolean Connect(String id, String pw) {
+	public static boolean Connect(String id, String pw) {
 		try {
 			// Get SSH public, private keys from server
 			String[] SshKeys = GetKeys(id);

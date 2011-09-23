@@ -1,7 +1,6 @@
 package org.ksa14.webhard;
 
 import org.ksa14.webhard.ui.*;
-import org.ksa14.webhard.sftp.*;
 
 /**
  * The main class
@@ -9,19 +8,14 @@ import org.ksa14.webhard.sftp.*;
  * @author Jongwook
  */
 public class Main {
-	public static SftpUtil Sftp;
-	
 	/**
 	 * The entry point of the program.
 	 * 
 	 * @param args the command line arguments. will not be used.
 	 */
-	public static void main(String ... args) {		
-		//TODO : Setup sftp connection
-		Sftp = new SftpUtil();
-		
+	public static void main(String ... args) {
 		// Check authentication
-		if (!AuthDialog.Authenticate(Sftp))
+		if (!AuthDialog.Authenticate())
 			return;
 		
 		// Open the main window if the authentication was successful.
