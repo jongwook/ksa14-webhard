@@ -44,7 +44,7 @@ public class SftpUtil {
 			return null;
 			
 			String keys[] = {publicKey, privateKey.toString()};
-			return keys;   
+			return keys;
 		} catch (Exception e) {
 			return null;
 		}

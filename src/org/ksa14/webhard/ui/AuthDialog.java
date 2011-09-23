@@ -2,9 +2,7 @@ package org.ksa14.webhard.ui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
-import java.io.*;
-import javax.imageio.ImageIO;
+import java.net.*;
 import javax.swing.*;
 
 import org.ksa14.webhard.sftp.*;
@@ -16,10 +14,6 @@ public class AuthDialog extends JDialog {
 	
 	private JTextField TextID;
 	private JPasswordField TextPW;
-	private JButton BtnConnect;
-	
-	private BufferedImage ImgLogo;
-	
 	private static boolean Authed = false;
 	private SftpUtil Sftp;
 	
@@ -31,12 +25,20 @@ public class AuthDialog extends JDialog {
 	public AuthDialog(SftpUtil su) {
 		// Set absolute layout
 		this.setLayout(null);
+
+		// Try to set system native look-and-feel
+		SwingUtility.setSystemLookAndFeel();
 		
-		try {
-			// Load KSA logo image
-			ImgLogo = ImageIO.read(new File("ksa.jpg"));
-		} catch (IOException e) {
-			// Do nothing
+		// Load KSA logo image
+		ImageIcon IconLogo;
+		URL LogoURL = getClass().getResource("/res/ksa.jpg");
+		if (LogoURL != null) {
+			IconLogo = new ImageIcon(LogoURL);
+			
+			JLabel LabelLogo = new JLabel("");
+			LabelLogo.setBounds(25, 25, IconLogo.getIconWidth(), IconLogo.getIconHeight());
+			LabelLogo.setIcon(IconLogo);
+			this.add(LabelLogo);
 		}
 		
 		// Add components to input login information
@@ -68,8 +70,8 @@ public class AuthDialog extends JDialog {
 		this.add(TextPW);
 		
 		// Add buttons to connect or exit
-		BtnConnect = new JButton("접속");
-		BtnConnect.setBounds(270, 110, 60, 25);
+		JButton BtnConnect = new JButton("접속");
+		BtnConnect.setBounds(290, 115, 60, 25);
 		BtnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Authed = RequestAuth(TextID.getText(), new String(TextPW.getPassword()));
@@ -80,7 +82,7 @@ public class AuthDialog extends JDialog {
 		this.add(BtnConnect);
 		
 		JButton BtnExit = new JButton("종료");
-		BtnExit.setBounds(350, 110, 60, 25);
+		BtnExit.setBounds(355, 115, 60, 25);
 		BtnExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Authed = false;
@@ -106,12 +108,6 @@ public class AuthDialog extends JDialog {
 		
 		// Show window
 		this.setVisible(true);
-	}
-	
-	// Override paint method
-	public void paint(Graphics g) {
-		super.paint(g);
-		g.drawImage(ImgLogo, 25, 50, null);
 	}
 	
 	public boolean RequestAuth(String id, String pw) {
