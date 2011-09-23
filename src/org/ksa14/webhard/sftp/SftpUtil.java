@@ -7,6 +7,7 @@ import java.security.*;
 import java.util.*;
 
 import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelSftp.*;
 
 public class SftpUtil {
 	public static final String Username = "apache";
@@ -14,7 +15,7 @@ public class SftpUtil {
 
 	private static JSch SUJsch;
 	private static Session SUSession;
-	private static Channel SUChannel;
+	private static ChannelSftp SUChannel;
 	
 	private static String md5(String input) {
 		try {
@@ -69,12 +70,39 @@ public class SftpUtil {
 			SUSession.connect();
 			
 			// Start SFTP channel
-			SUChannel = SUSession.openChannel("sftp");
+			SUChannel = (ChannelSftp)SUSession.openChannel("sftp");
 			SUChannel.connect();
+			SUChannel.setFilenameEncoding("UTF-8");
 		} catch (Exception e) {
 			return false;
 		}
 		
 		return true;
+	}
+	
+	public static Vector<String> GetDirectoryList(String path) {
+		// Check connection
+		if (!SUChannel.isConnected())
+			return null;
+		
+		Vector<String> retv = new Vector<String>();
+
+		try {
+			Vector<?> lsv = SUChannel.ls(path);
+			for (int i=0; i<lsv.size(); i++) {
+				Object tmp = lsv.elementAt(i);
+				if (tmp instanceof LsEntry) {
+					LsEntry tmpe = (LsEntry)tmp;
+					String dirname = tmpe.getFilename();
+					if ((dirname.compareTo(".") != 0) && (dirname.compareTo("..") != 0) && (dirname.compareTo("recycle_bin") != 0) && tmpe.getAttrs().isDir())
+						retv.add(dirname);
+				}
+			}
+		} catch (SftpException e) {
+			e.printStackTrace();
+			retv = null;
+		}
+		
+		return retv;
 	}
 }

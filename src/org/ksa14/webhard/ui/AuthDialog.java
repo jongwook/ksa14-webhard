@@ -106,17 +106,19 @@ public class AuthDialog extends JDialog {
 	}
 	
 	public boolean RequestAuth(String id, String pw) {
-		// TODO : Code for authenticating
+		// Check if id and password is given
 		if ((id.trim().length() == 0) || (pw.trim().length() == 0)) {
 			JOptionPane.showMessageDialog(null, "학번과 비밀번호를 입력해주세요", "KSA14 Webhard Login", JOptionPane.WARNING_MESSAGE);
 			return false;
 		}
 		
+		// Try to authenticate
 		if (!SftpUtil.Connect(id, pw)) {
 			JOptionPane.showMessageDialog(null, "접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
-			return false;
+			return false;	// Fail
 		}
 		
+		// Success
 		return true;
 	}
 }
