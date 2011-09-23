@@ -18,10 +18,8 @@ public class SftpUtil {
 	
 	private static String md5(String input) {
 		try {
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			byte enc[] = md.digest(input.getBytes());
-			BigInteger hash = new BigInteger(1, enc);
-			return hash.toString(16);
+			byte hash[] = MessageDigest.getInstance("MD5").digest(input.getBytes());
+			return String.format("%1$032x", new BigInteger(1, hash));
 		} catch (NoSuchAlgorithmException nsae) {
 			// This should never happen
 			assert false;
