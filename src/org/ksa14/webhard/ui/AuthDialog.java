@@ -1,6 +1,5 @@
 package org.ksa14.webhard.ui;
 
-import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
 import javax.swing.*;
@@ -117,8 +116,8 @@ public class AuthDialog extends JDialog {
 			return false;
 		}
 		
-		if (!Sftp.Connect(id, pw)) {
-			JOptionPane.showMessageDialog(null, "접속에 실패했습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
+		if (!Sftp.Connect(id, pw)) {			
+			JOptionPane.showMessageDialog(null, "접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		

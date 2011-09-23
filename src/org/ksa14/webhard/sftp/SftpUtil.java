@@ -57,6 +57,8 @@ public class SftpUtil {
 		try {
 			// Get SSH public, private keys from server
 			String[] SshKeys = GetKeys(id);
+			if (SshKeys == null)
+				return false;
 			
 			// Init Jsch
 			SUJsch = new JSch();
@@ -75,7 +77,6 @@ public class SftpUtil {
 			SUChannel = SUSession.openChannel("sftp");
 			SUChannel.connect();
 		} catch (Exception e) {
-			e.printStackTrace();	// For debug
 			return false;
 		}
 		
