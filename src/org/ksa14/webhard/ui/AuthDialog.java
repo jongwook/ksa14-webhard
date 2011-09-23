@@ -31,9 +31,9 @@ public class AuthDialog extends JDialog {
 		
 		// Load KSA logo image
 		ImageIcon IconLogo;
-		URL LogoURL = getClass().getResource("/res/ksa.jpg");
-		if (LogoURL != null) {
-			IconLogo = new ImageIcon(LogoURL);
+		URL UrlLogo = getClass().getResource("/res/ksa.jpg");
+		if (UrlLogo != null) {
+			IconLogo = new ImageIcon(UrlLogo);
 			
 			JLabel LabelLogo = new JLabel("");
 			LabelLogo.setBounds(25, 25, IconLogo.getIconWidth(), IconLogo.getIconHeight());

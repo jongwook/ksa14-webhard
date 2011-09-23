@@ -55,11 +55,15 @@ public class SftpUtil {
 	
 	public boolean Connect(String id, String pw) {
 		try {
-			String[] RSAKeys = GetKeys(id);
+			// Get SSH public, private keys from server
+			String[] SshKeys = GetKeys(id);
 			
+			// Init Jsch
 			SUJsch = new JSch();
-			SUJsch.addIdentity("Key", RSAKeys[1].getBytes(), RSAKeys[0].getBytes(), md5(pw).getBytes());
+			String hpw = md5(pw);
+			SUJsch.addIdentity("Key", SshKeys[1].getBytes(), SshKeys[0].getBytes(), hpw.getBytes());
 			
+			// Start SSH session
 			SUSession = SUJsch.getSession(Username, Host, 22);
 			Properties SUConf = new Properties();
 			SUConf.put("StrictHostKeyChecking", "no");
@@ -67,9 +71,11 @@ public class SftpUtil {
 			
 			SUSession.connect();
 			
+			// Start SFTP channel
 			SUChannel = SUSession.openChannel("sftp");
 			SUChannel.connect();
-		} catch (JSchException e) {
+		} catch (Exception e) {
+			e.printStackTrace();	// For debug
 			return false;
 		}
 		
