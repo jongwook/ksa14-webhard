@@ -46,6 +46,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		this.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		this.addTreeSelectionListener(this);
 		this.addTreeWillExpandListener(this);
+		this.setRowHeight(20);
 		this.setCellRenderer(new MyTreeCellRenderer());
 	}
 	
@@ -66,9 +67,6 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 
 			DefaultMutableTreeNode child = new DefaultMutableTreeNode(dirlist.elementAt(i));
 
-			// save the directory path to the object
-			//child.setUserObject(path + "/" + dirlist.elementAt(i));
-
 			// create dummy child
 			child.add(new DefaultMutableTreeNode("..."));
 
@@ -87,7 +85,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		this.setSelectionPath(e.getPath());
 	}
 	
-	public void treeWillCollapse(TreeExpansionEvent e)  {}
+	public void treeWillCollapse(TreeExpansionEvent e) {}
 	
 	public void UpdateNode(Object paths[], DefaultMutableTreeNode node) {
 		if(node == null) return;		

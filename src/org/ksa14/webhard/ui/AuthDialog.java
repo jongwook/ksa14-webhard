@@ -1,5 +1,6 @@
 package org.ksa14.webhard.ui;
 
+import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
 import javax.swing.*;
@@ -11,13 +12,13 @@ public class AuthDialog extends JDialog {
 	public static final int wWidth = 460;
 	public static final int wHeight = 200;
 	
-	private JTextField TextID;
-	private JPasswordField TextPW;
-	private static boolean Authed = false;
+	private JTextField textID;
+	private JPasswordField textPW;
+	private static boolean authed = false;
 	
 	public static boolean Authenticate() {
 		new AuthDialog();
-		return Authed;
+		return authed;
 	}
 
 	public AuthDialog() {
@@ -26,6 +27,7 @@ public class AuthDialog extends JDialog {
 
 		// Try to set system native look-and-feel
 		SwingUtility.setSystemLookAndFeel();
+		this.setBackground(Color.white);
 		
 		// Load KSA logo image
 		ImageIcon IconLogo;
@@ -48,32 +50,32 @@ public class AuthDialog extends JDialog {
 		LabelPW.setBounds(195, 70, 60, 15);
 		this.add(LabelPW);
 		
-		TextID = new JTextField();
-		TextID.setBounds(260, 27, 155, 21);
-		TextID.setColumns(20);
-		this.add(TextID);
+		textID = new JTextField();
+		textID.setBounds(260, 27, 155, 21);
+		textID.setColumns(20);
+		this.add(textID);
 		
-		TextPW = new JPasswordField();
-		TextPW.setBounds(260, 67, 155, 21);
-		TextPW.setColumns(20);
-		TextPW.addKeyListener(new KeyAdapter() {
+		textPW = new JPasswordField();
+		textPW.setBounds(260, 67, 155, 21);
+		textPW.setColumns(20);
+		textPW.addKeyListener(new KeyAdapter() {
 			public void keyTyped(KeyEvent e) {
 				if (e.getKeyChar() == KeyEvent.VK_ENTER) {
-					Authed = RequestAuth(TextID.getText(), new String(TextPW.getPassword()));
-					if (Authed)
+					authed = RequestAuth(textID.getText(), new String(textPW.getPassword()));
+					if (authed)
 						dispose();
 				}
 			}
 		});
-		this.add(TextPW);
+		this.add(textPW);
 		
 		// Add buttons to connect or exit
 		JButton BtnConnect = new JButton("접속");
 		BtnConnect.setBounds(290, 115, 60, 25);
 		BtnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Authed = RequestAuth(TextID.getText(), new String(TextPW.getPassword()));
-				if (Authed)
+				authed = RequestAuth(textID.getText(), new String(textPW.getPassword()));
+				if (authed)
 					dispose();
 			}
 		});
@@ -83,7 +85,7 @@ public class AuthDialog extends JDialog {
 		BtnExit.setBounds(355, 115, 60, 25);
 		BtnExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Authed = false;
+				authed = false;
 				dispose();
 			}
 		});

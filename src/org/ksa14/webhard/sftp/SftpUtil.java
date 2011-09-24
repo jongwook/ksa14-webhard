@@ -9,9 +9,9 @@ public class SftpUtil {
 	public static final String Username = "apache";
 	public static final String Host = "webhard.ksa14.org";
 
-	private static JSch SUJsch;
-	private static Session SUSession;
-	private static ChannelSftp SUChannel;
+	private static JSch jsch;
+	private static HashMap<String, Session> sessions = new HashMap<String, Session>();
+	private static ChannelSftp channel;
 
 	public static boolean Connect(String id, String pw) {
 		try {
@@ -21,22 +21,24 @@ public class SftpUtil {
 				return false;
 
 			// Init Jsch
-			SUJsch = new JSch();
+			jsch = new JSch();
 			String hpw = AuthUtil.md5(pw);
-			SUJsch.addIdentity("Key", SshKeys[1].getBytes(), SshKeys[0].getBytes(), hpw.getBytes());
+			jsch.addIdentity("Key", SshKeys[1].getBytes(), SshKeys[0].getBytes(), hpw.getBytes());
 
 			// Start SSH session
-			SUSession = SUJsch.getSession(Username, Host, 22);
-			Properties SUConf = new Properties();
-			SUConf.put("StrictHostKeyChecking", "no");
-			SUSession.setConfig(SUConf);
+			Session session = jsch.getSession(Username, Host, 22);
+			sessions.put("main", session);
+			
+			Properties conf = new Properties();
+			conf.put("StrictHostKeyChecking", "no");
+			session.setConfig(conf);
 
-			SUSession.connect();
+			session.connect();
 
 			// Start SFTP channel
-			SUChannel = (ChannelSftp)SUSession.openChannel("sftp");
-			SUChannel.connect();
-			SUChannel.setFilenameEncoding("UTF-8");
+			channel = (ChannelSftp)session.openChannel("sftp");
+			channel.connect();
+			channel.setFilenameEncoding("UTF-8");
 		} catch (Exception e) {
 			return false;
 		}
@@ -46,13 +48,13 @@ public class SftpUtil {
 
 	public static Vector<String> GetDirectoryList(String path) {
 		// Check connection
-		if (!SUChannel.isConnected())
+		if (!channel.isConnected())
 			return null;
 
 		Vector<String> retv = new Vector<String>();
 
 		try {
-			Vector<?> lsv = SUChannel.ls(path);
+			Vector<?> lsv = channel.ls(path);
 			for (int i=0; i<lsv.size(); i++) {
 				Object tmp = lsv.elementAt(i);
 				if (tmp instanceof LsEntry) {
@@ -73,13 +75,13 @@ public class SftpUtil {
 
 	public static Vector<LsEntry> GetFilesList(String path, int sortmode) {
 		// Check connection
-		if (!SUChannel.isConnected())
+		if (!channel.isConnected())
 			return null;
 
 		Vector<LsEntry> retv = new Vector<LsEntry>();
 
 		try {
-			Vector<?> lsv = SUChannel.ls(path);
+			Vector<?> lsv = channel.ls(path);
 			for (int i=0; i<lsv.size(); i++) {
 				Object item = lsv.elementAt(i);
 				if (item instanceof LsEntry) {

@@ -30,19 +30,14 @@ public class FileList extends JTable {
 	public static final int SORT_EXT			= 2;
 	public static final int SORT_DATE			= 3;
 
-	public static int SortMode = SORT_FILENAME;
-	public static boolean Asc = true;
+	public static int sortMode = SORT_FILENAME;
+	public static boolean asc = true;
 
 	/**
 	 * The default table model 
 	 */
 	protected static DefaultTableModel model = new DefaultTableModel(FileList.rows, FileList.columns) {
 		public static final long serialVersionUID = 0L;
-
-		public Class<?> getColumnClass(int column) {
-			return getValueAt(0, column).getClass();
-		}
-
 		public boolean isCellEditable(int row, int column) {
 			return false;
 		}
@@ -56,24 +51,19 @@ public class FileList extends JTable {
 		}
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {			
 			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
 			String text = value.toString();
+			
 			if (column == 0){
 				label.setText(text);
 				label.setIcon(IconManager.Get(text));
-			} else if (column == 1) {
-				label.setText(FileSize((Long)value));
-				label.setIcon(null);
-			} else if (column == 2) {
-				label.setText(text + "파일");
-				label.setIcon(null);	
-			} else if (column == 3) {
-				label.setText(dateFormat.format(new Date((Long)value)));
-				label.setIcon(null);			
+				label.setHorizontalAlignment(JLabel.LEFT);
 			} else {
-				label.setText(text);
 				label.setIcon(null);
-			}
+				label.setHorizontalAlignment(JLabel.RIGHT);
+				if (column == 1) label.setText(FileSize((Long)value));
+				if (column == 2) label.setText(text.toUpperCase() + " 파일");
+				if (column == 3) label.setText(dateFormat.format(new Date((Long)value)));
+			} 
 			return label;
 		}
 	}
@@ -82,9 +72,9 @@ public class FileList extends JTable {
 		public void mouseClicked(MouseEvent e) {
 			JTable table = FileList.GetInstance();
 			int vColIndex = table.getColumnModel().getColumnIndexAtX(e.getX());
-			
+
 			if (vColIndex != -1) 
-				Sort(vColIndex);
+				Sort(vColIndex, asc=(sortMode==vColIndex)?!asc:true);
 		}
 	}
 
@@ -103,24 +93,14 @@ public class FileList extends JTable {
 		public int compare(Object arg0, Object arg1) {
 			Vector<?> v0 = (Vector<?>)arg0;
 			Vector<?> v1 = (Vector<?>)arg1;
-
-			long s0, s1;
 			int sign = asc?1:-1;
-			
-			switch (mode) {
-			case SORT_SIZE:
-				s0 = (Long)v0.elementAt(1);
-				s1 = (Long)v1.elementAt(1);
+
+			if(mode == SORT_SIZE || mode == SORT_DATE) {
+				long s0 = (Long)v0.elementAt(mode);
+				long s1 = (Long)v1.elementAt(mode);
 				return sign * ( (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0) );
-			case SORT_EXT:
-				return sign * v0.elementAt(2).toString().compareTo(v1.elementAt(2).toString());
-			case SORT_DATE:
-				s0 = (Long)v0.elementAt(3);
-				s1 = (Long)v1.elementAt(3);
-				return sign * ( (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0) );
-			case SORT_FILENAME:
-			default:
-				return sign * ((String)v0.elementAt(0)).compareTo((String)v1.elementAt(0));
+			} else {
+				return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
 			}
 		}
 	}
@@ -136,11 +116,11 @@ public class FileList extends JTable {
 		this.putClientProperty("Table.isFileList", Boolean.TRUE);
 
 		this.setCellSelectionEnabled(true);
-		this.setIntercellSpacing(new Dimension());
+		this.setIntercellSpacing(new Dimension(3,3));
 		this.setShowGrid(false);
 		this.getColumnModel().getColumn(0).setPreferredWidth(400);
-		this.setDefaultRenderer(Long.class, MyTableCellRenderer.getInstance());
-		this.setDefaultRenderer(String.class, MyTableCellRenderer.getInstance());
+		this.setDefaultRenderer(Object.class, MyTableCellRenderer.getInstance());
+		this.setRowHeight(20);
 
 		this.getTableHeader().addMouseListener(new ColumnHeaderListener());
 	}
@@ -150,7 +130,7 @@ public class FileList extends JTable {
 	}
 
 	public void UpdateList(String path) {
-		Vector<LsEntry> list = SftpUtil.GetFilesList(path, SortMode);
+		Vector<LsEntry> list = SftpUtil.GetFilesList(path, sortMode);
 
 		DefaultTableModel model = (DefaultTableModel)this.getModel();
 		while(model.getRowCount() > 0)
@@ -159,37 +139,33 @@ public class FileList extends JTable {
 		for(LsEntry entry : list) {
 			String fn = entry.getFilename();
 			int in = fn.lastIndexOf('.');
-			String extn = (in != -1) ? fn.substring(in + 1) : "";
+			String extension = (in != -1) ? fn.substring(in + 1) : "";
 			Object row[] = {
 					entry.getFilename(),
 					new Long(entry.getAttrs().getSize()),
-					extn,
+					extension,
 					new Long(entry.getAttrs().getMTime() * 1000L)
 			};
 			model.addRow(row);
 		}
 
-		Sort(SortMode);
+		Sort(SORT_FILENAME, true);
 	}
 
-	public void Sort(int mode) {
-		Asc = (SortMode == mode)?!Asc:true;
-
+	private void Sort(int mode, boolean asc) {
 		Vector<?> mv = model.getDataVector();
-		Collections.sort(mv, ModelComparator.getInstance(mode, Asc));
-
-		SortMode = mode;
+		Collections.sort(mv, ModelComparator.getInstance(mode, asc));
+		sortMode = mode;
 	}
 
 	private static String FileSize(long size) {
 		double fSize = size;
 		String units[] = {"B", "KB", "MB", "GB"};
-		for(int i=0; i<4; ++i) {
-			if(fSize < 1024.0) {
+		for(int i=0; i<units.length; ++i) {
+			if(fSize < 1024.0) 
 				return String.format("%.1f %s", fSize, units[i]);
-			} 
 			fSize /= 1024.0;
 		}
-		return String.format("%.1f %s", fSize, "TB");
+		return String.format("%.1f TB", fSize);
 	}
 }
