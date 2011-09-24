@@ -56,4 +56,8 @@ public class FileList extends JTable {
 		}
 		return theInstance;
 	}
+	
+	public void UpdateList(String path) {
+		
+	}
 }

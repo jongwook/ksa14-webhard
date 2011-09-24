@@ -101,5 +101,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 			node.remove(0);
 			UpdateTree(node,path.toString());
 		}
+		
+		FileList.GetInstance().UpdateList(path.toString());
 	}
 }
