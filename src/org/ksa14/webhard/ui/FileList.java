@@ -24,12 +24,12 @@ public class FileList extends JTable {
 	// TODO consider moving this part to a separate resource file
 	public static final String columns[] = {"이름", "크기", "종류", "날짜"};
 	public static final Object rows[][] = {};
-	
+
 	public static final int SORT_FILENAME		= 0;
 	public static final int SORT_SIZE			= 1;
 	public static final int SORT_EXT			= 2;
 	public static final int SORT_DATE			= 3;
-	
+
 	public static int SortMode = SORT_FILENAME;
 	public static boolean Asc = true;
 
@@ -48,8 +48,12 @@ public class FileList extends JTable {
 		}
 	};
 
-	public class MyTableCellRenderer extends DefaultTableCellRenderer {
+	public static class MyTableCellRenderer extends DefaultTableCellRenderer {
 		public static final long serialVersionUID = 0L;
+		private static MyTableCellRenderer theInstance;
+		public static MyTableCellRenderer getInstance() {
+			return (theInstance == null) ? theInstance = new MyTableCellRenderer() : theInstance;
+		}
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {			
 			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
@@ -58,13 +62,13 @@ public class FileList extends JTable {
 				label.setText(text);
 				label.setIcon(IconManager.Get(text));
 			} else if (column == 1) {
-				label.setText(FileSize(text));
+				label.setText(FileSize((Long)value));
 				label.setIcon(null);
 			} else if (column == 2) {
-				label.setText("파일");
+				label.setText(text + "파일");
 				label.setIcon(null);	
 			} else if (column == 3) {
-				label.setText(dateFormat.format(new Date(Long.parseLong(text))));
+				label.setText(dateFormat.format(new Date((Long)value)));
 				label.setIcon(null);			
 			} else {
 				label.setText(text);
@@ -73,83 +77,50 @@ public class FileList extends JTable {
 			return label;
 		}
 	}
-	
+
 	public class ColumnHeaderListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
 			JTable table = FileList.GetInstance();
-			TableColumnModel colModel = table.getColumnModel();
-
-	        // The index of the column whose header was clicked
-	        int vColIndex = colModel.getColumnIndexAtX(e.getX());
-	        int mColIndex = table.convertColumnIndexToModel(vColIndex);
-	        
-	        // Return if not clicked on any column header
-	        if (vColIndex == -1) {
-	            return;
-	        }
-	        
-	        // Determine if mouse was clicked between column heads
-	        Rectangle headerRect = table.getTableHeader().getHeaderRect(vColIndex);
-	        if (vColIndex == 0) {
-	            headerRect.width -= 3;    // Hard-coded constant
-	        } else {
-	            headerRect.grow(-3, 0);   // Hard-coded constant
-	        }
-	        if (!headerRect.contains(e.getX(), e.getY())) {
-	            // Mouse was clicked between column heads
-	            // vColIndex is the column head closest to the click
-
-	            // vLeftColIndex is the column head to the left of the click
-	            int vLeftColIndex = vColIndex;
-	            if (e.getX() < headerRect.x) {
-	                vLeftColIndex--;
-	            }
-	        }
-	        
-	        Sort(vColIndex);
+			int vColIndex = table.getColumnModel().getColumnIndexAtX(e.getX());
+			
+			if (vColIndex != -1) 
+				Sort(vColIndex);
 		}
 	}
 
-	private class ModelComparator implements Comparator {
+	private static class ModelComparator implements Comparator<Object> {
 		private int mode = 0;
 		private boolean asc = true;
-		
-		public ModelComparator(int m, boolean a) {
+		private static ModelComparator instances[][];
+		private ModelComparator(int m, boolean a) {
 			this.mode = m;
 			this.asc = a;
 		}
-		
+		public static ModelComparator getInstance(int m, boolean a) {
+			if(instances == null) instances = new ModelComparator[4][2];
+			return (instances[m][a?0:1] == null) ? instances[m][a?0:1] = new ModelComparator(m, a) : instances[m][a?0:1];
+		}
 		public int compare(Object arg0, Object arg1) {
-			Vector v0 = (Vector)arg0;
-			Vector v1 = (Vector)arg1;
-			
+			Vector<?> v0 = (Vector<?>)arg0;
+			Vector<?> v1 = (Vector<?>)arg1;
+
 			long s0, s1;
+			int sign = asc?1:-1;
+			
 			switch (mode) {
 			case SORT_SIZE:
-				s0 = Long.parseLong((String)v0.elementAt(1));
-				s1 = Long.parseLong((String)v1.elementAt(1));
-				if (asc)
-					return (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0);
-				else
-					return (s0 > s1) ? -1 : ((s0 < s1) ? 1 : 0);
+				s0 = (Long)v0.elementAt(1);
+				s1 = (Long)v1.elementAt(1);
+				return sign * ( (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0) );
 			case SORT_EXT:
-				if (asc)
-					return ((String)v0.elementAt(2)).compareTo((String)v1.elementAt(2));
-				else
-					return ((String)v1.elementAt(2)).compareTo((String)v0.elementAt(2));
+				return sign * v0.elementAt(2).toString().compareTo(v1.elementAt(2).toString());
 			case SORT_DATE:
-				s0 = Long.parseLong((String)v0.elementAt(3));
-				s1 = Long.parseLong((String)v1.elementAt(3));
-				if (asc)
-					return (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0);
-				else
-					return (s0 > s1) ? -1 : ((s0 < s1) ? 1 : 0);
+				s0 = (Long)v0.elementAt(3);
+				s1 = (Long)v1.elementAt(3);
+				return sign * ( (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0) );
 			case SORT_FILENAME:
 			default:
-				if (asc)
-					return ((String)v0.elementAt(0)).compareTo((String)v1.elementAt(0));
-				else
-					return ((String)v1.elementAt(0)).compareTo((String)v0.elementAt(0));
+				return sign * ((String)v0.elementAt(0)).compareTo((String)v1.elementAt(0));
 			}
 		}
 	}
@@ -168,18 +139,16 @@ public class FileList extends JTable {
 		this.setIntercellSpacing(new Dimension());
 		this.setShowGrid(false);
 		this.getColumnModel().getColumn(0).setPreferredWidth(400);
-		this.setDefaultRenderer(Object.class, new MyTableCellRenderer());
-		
+		this.setDefaultRenderer(Long.class, MyTableCellRenderer.getInstance());
+		this.setDefaultRenderer(String.class, MyTableCellRenderer.getInstance());
+
 		this.getTableHeader().addMouseListener(new ColumnHeaderListener());
 	}
 
 	public static FileList GetInstance() {
-		if(theInstance == null) {
-			theInstance = new FileList();
-		}
-		return theInstance;
+		return (theInstance == null) ? theInstance = new FileList() : theInstance;
 	}
-	
+
 	public void UpdateList(String path) {
 		Vector<LsEntry> list = SftpUtil.GetFilesList(path, SortMode);
 
@@ -193,31 +162,27 @@ public class FileList extends JTable {
 			String extn = (in != -1) ? fn.substring(in + 1) : "";
 			Object row[] = {
 					entry.getFilename(),
-					String.valueOf(entry.getAttrs().getSize()),
+					new Long(entry.getAttrs().getSize()),
 					extn,
-					String.valueOf(entry.getAttrs().getMTime() * 1000L)
-					//dateFormat.format(new Date(entry.getAttrs().getMTime() * 1000L))
+					new Long(entry.getAttrs().getMTime() * 1000L)
 			};
 			model.addRow(row);
 		}
-		
+
 		Sort(SortMode);
 	}
-	
+
 	public void Sort(int mode) {
-		if (SortMode == mode)
-			Asc = !Asc;
-		else
-			Asc = true;
-		
-		Vector mv = model.getDataVector();
-		Collections.sort(mv, new ModelComparator(mode, Asc));
-		
+		Asc = (SortMode == mode)?!Asc:true;
+
+		Vector<?> mv = model.getDataVector();
+		Collections.sort(mv, ModelComparator.getInstance(mode, Asc));
+
 		SortMode = mode;
 	}
 
-	private String FileSize(String size) {
-		double fSize = Double.parseDouble(size);
+	private static String FileSize(long size) {
+		double fSize = size;
 		String units[] = {"B", "KB", "MB", "GB"};
 		for(int i=0; i<4; ++i) {
 			if(fSize < 1024.0) {

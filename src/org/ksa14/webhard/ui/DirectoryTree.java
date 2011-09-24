@@ -50,10 +50,10 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	}
 	
 	public static DirectoryTree GetInstance() {
-		if(theInstance == null) {
+		if(theInstance == null) 
 			theInstance = new DirectoryTree(new DefaultMutableTreeNode("KSA14 Webhard"));
-		}
-		return theInstance;		
+		
+		return theInstance;	
 	}
 
 	private void UpdateTree(DefaultMutableTreeNode parent, String path) {
