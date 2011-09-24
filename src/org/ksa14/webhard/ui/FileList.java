@@ -16,10 +16,10 @@ import com.jcraft.jsch.ChannelSftp.*;
  */
 public class FileList extends JTable {
 	public static final long serialVersionUID = 0L;
-	
+
 	private static FileList theInstance;
 	private static DateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd");
-	
+
 	// TODO consider moving this part to a separate resource file
 	public static final String columns[] = {"이름", "크기", "종류", "날짜"};
 	public static final Object rows[][] = {};
@@ -29,47 +29,64 @@ public class FileList extends JTable {
 	 */
 	protected static DefaultTableModel model = new DefaultTableModel(FileList.rows, FileList.columns) {
 		public static final long serialVersionUID = 0L;
-		
-        public Class<?> getColumnClass(int column) {
-            return getValueAt(0, column).getClass();
-        }
-        
-        public boolean isCellEditable(int row, int column) {
-            return false;
-        }
-    };
-	
-	
+
+		public Class<?> getColumnClass(int column) {
+			return getValueAt(0, column).getClass();
+		}
+
+		public boolean isCellEditable(int row, int column) {
+			return false;
+		}
+	};
+
+	public class MyTableCellRenderer extends DefaultTableCellRenderer {
+		public static final long serialVersionUID = 0L;
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+			String text = value.toString();
+			if(column == 0){
+				label.setText(text);
+				label.setIcon(IconManager.Get(text));
+			} else {
+				label.setText(text);
+				label.setIcon(null);
+			}
+			return label;
+		}
+	}
+
 	/**
 	 * Initializes the table and its columns
 	 */
 	private FileList() {
 		super(FileList.model);
-		
+
 		// swing internal property to act like file chooser. 
 		// might not be a good idea to use this private API
 		this.putClientProperty("Table.isFileList", Boolean.TRUE);
-		
+
 		this.setCellSelectionEnabled(true);
 		this.setIntercellSpacing(new Dimension());
 		this.setShowGrid(false);
 		this.getColumnModel().getColumn(0).setPreferredWidth(400);
+		this.setDefaultRenderer(Object.class, new MyTableCellRenderer());
 	}
-	
+
 	public static FileList GetInstance() {
 		if(theInstance == null) {
 			theInstance = new FileList();
 		}
 		return theInstance;
 	}
-	
+
 	public void UpdateList(String path) {		
 		Vector<LsEntry> list = SftpUtil.GetFilesList(path);
-		
+
 		DefaultTableModel model = (DefaultTableModel)this.getModel();
 		while(model.getRowCount() > 0)
 			model.removeRow(0);
-		
+
 		for(LsEntry entry : list) {
 			Object row[] = {
 					entry.getFilename(),
@@ -80,7 +97,7 @@ public class FileList extends JTable {
 			model.addRow(row);
 		}
 	}
-	
+
 	private String FileSize(long size) {
 		double fSize = size;
 		String units[] = {"B", "KB", "MB", "GB"};
