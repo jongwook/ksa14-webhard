@@ -18,6 +18,7 @@ import org.ksa14.webhard.sftp.*;
 public class DirectoryTree extends JTree implements TreeSelectionListener, TreeWillExpandListener {
 	public static final long serialVersionUID = 0L;
 
+	private static DirectoryTree theInstance;
 	DefaultMutableTreeNode top;
 
 	private class MyTreeCellRenderer extends DefaultTreeCellRenderer {
@@ -34,7 +35,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	/**
 	 * Initializes the directory tree view 
 	 */
-	public DirectoryTree(DefaultMutableTreeNode tnode) {
+	private DirectoryTree(DefaultMutableTreeNode tnode) {
 		super (tnode);
 		top = tnode;
 
@@ -46,6 +47,13 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		this.addTreeSelectionListener(this);
 		this.addTreeWillExpandListener(this);
 		this.setCellRenderer(new MyTreeCellRenderer());
+	}
+	
+	public static DirectoryTree GetInstance() {
+		if(theInstance == null) {
+			theInstance = new DirectoryTree(new DefaultMutableTreeNode("KSA14 Webhard"));
+		}
+		return theInstance;		
 	}
 
 	private void UpdateTree(DefaultMutableTreeNode parent, String path) {
@@ -76,6 +84,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	public void treeWillExpand(TreeExpansionEvent e) {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
 		UpdateNode(e.getPath().getPath(), node);
+		this.setSelectionPath(e.getPath());
 	}
 	
 	public void treeWillCollapse(TreeExpansionEvent e)  {}

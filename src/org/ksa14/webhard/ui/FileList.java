@@ -12,6 +12,8 @@ import javax.swing.table.*;
 public class FileList extends JTable {
 	public static final long serialVersionUID = 0L;
 	
+	private static FileList theInstance;
+	
 	// TODO consider moving this part to a separate resource file
 	public static final String columns[] = {"이름", "크기", "종류", "날짜"};
 	public static final Object rows[][] = {};
@@ -35,7 +37,7 @@ public class FileList extends JTable {
 	/**
 	 * Initializes the table and its columns
 	 */
-	public FileList() {
+	private FileList() {
 		super(FileList.model);
 		
 		// swing internal property to act like file chooser. 
@@ -46,5 +48,12 @@ public class FileList extends JTable {
 		this.setIntercellSpacing(new Dimension());
 		this.setShowGrid(false);
 		this.getColumnModel().getColumn(0).setPreferredWidth(400);
+	}
+	
+	public static FileList GetInstance() {
+		if(theInstance == null) {
+			theInstance = new FileList();
+		}
+		return theInstance;
 	}
 }

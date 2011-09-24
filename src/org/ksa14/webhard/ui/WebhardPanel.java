@@ -2,7 +2,6 @@ package org.ksa14.webhard.ui;
 
 import java.awt.*;
 import javax.swing.*;
-import javax.swing.tree.*;
 
 /**
  * WebhardPanel maintains all components in the client area of the main webhard window
@@ -29,12 +28,12 @@ public class WebhardPanel extends JPanel {
 		this.add(this.toolBar, BorderLayout.PAGE_START);
 		
 		// Initialize the directory tree
-		this.tree = new DirectoryTree(new DefaultMutableTreeNode("KSA14 Webhard"));
+		this.tree = DirectoryTree.GetInstance();
 		JScrollPane SPTree = new JScrollPane(this.tree);
 		SPTree.setPreferredSize(new Dimension(200, 600));
 		
 		// Initialize the file list 
-		this.files = new FileList();
+		this.files = FileList.GetInstance();
 		JScrollPane SPList = new JScrollPane(this.files);
 		
 		this.add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, SPTree, SPList), BorderLayout.CENTER);
