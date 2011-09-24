@@ -63,7 +63,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		return theInstance;	
 	}
 
-	public void UpdateTreeDone(Vector<?> dirlist) {	
+	public void UpdateTreeDone(Vector<?> dirlist) {
 		for (int i=0; i<dirlist.size(); i++) {
 			String dir = (String)dirlist.elementAt(i);
 
@@ -121,6 +121,8 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 				if(!node.isLeaf() && node.getChildAt(0).toString().equals("...")) {
 					node.remove(0);
 					SftpAdapter.GetDirectoryList(path.toString());
+				} else {
+					UpdateStatus(SftpListener.DIRLIST_DONE, new Vector<Object>());
 				}
 
 				FileList.GetInstance().UpdateList(path.toString());
