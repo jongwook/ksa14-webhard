@@ -102,8 +102,10 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 
 	public void UpdateNode(final Object paths[], final DefaultMutableTreeNode node) {
 		if(node == null) return;
+		
 		this.setEnabled(false);
 		FileList.GetInstance().setEnabled(false);
+		
 		new Thread() { 
 			public void run() {
 				StringBuffer path = new StringBuffer();
@@ -120,5 +122,19 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 				FileList.GetInstance().UpdateList(path.toString());
 			}
 		}.start();		
+	}
+	
+	public void ChangeDirectory(String directory) {
+		DefaultMutableTreeNode childNode = null;
+		for(int i=0; i<lastNode.getChildCount(); ++i) {
+			if(lastNode.getChildAt(i).toString().equals(directory)) {
+				childNode = (DefaultMutableTreeNode)lastNode.getChildAt(i);
+			}
+		}
+		if(childNode == null) return;
+		lastNode = childNode;
+		lastPath = lastPath.pathByAddingChild(lastNode);
+		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		UpdateNode(lastPath.getPath(), lastNode);
 	}
 }

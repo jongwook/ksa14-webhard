@@ -104,6 +104,21 @@ public class FileList extends JTable {
 			}
 		}
 	}
+	
+	public class FileListListener extends MouseAdapter {
+		public void mouseClicked(MouseEvent e) {
+			if(e.getClickCount() == 2) {
+				// double clicked
+				JTable table = (JTable)e.getSource();
+				TableModel model = table.getModel();
+				int row = table.getSelectedRow();
+				if(model.getValueAt(row, COLUMN_EXT).equals(".")) {
+					// this is a folder
+					DirectoryTree.GetInstance().ChangeDirectory((String)model.getValueAt(row, COLUMN_FILENAME));
+				}
+			}
+		}
+	}
 
 	/**
 	 * Initializes the table and its columns
@@ -123,6 +138,7 @@ public class FileList extends JTable {
 		this.setRowHeight(20);
 
 		this.getTableHeader().addMouseListener(new ColumnHeaderListener());
+		this.addMouseListener(new FileListListener());
 	}
 
 	public static FileList GetInstance() {
