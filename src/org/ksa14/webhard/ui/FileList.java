@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 import org.ksa14.webhard.sftp.SftpAdapter;
+import org.ksa14.webhard.sftp.SftpListener;
+
 import com.jcraft.jsch.ChannelSftp.*;
 
 /**
@@ -15,7 +17,7 @@ import com.jcraft.jsch.ChannelSftp.*;
  * 
  * @author Jongwook
  */
-public class FileList extends JTable {
+public class FileList extends JTable implements SftpListener {
 	public static final long serialVersionUID = 0L;
 
 	private static FileList theInstance;
@@ -59,11 +61,11 @@ public class FileList extends JTable {
 				label.setIcon(FileInfo.GetIcon(extension));
 			} else {
 				label.setIcon(null);				
-				if (column == 1) label.setText(FileSize((Long)value));
+				if (column == 1) label.setText(((Long)value < 0) ? "" : FileSize((Long)value));
 				if (column == 2) label.setText(FileInfo.GetDescription(text));
 				if (column == 3) label.setText(dateFormat.format(new Date((Long)value)));
 			} 
-			label.setHorizontalAlignment((column == 1)?JLabel.RIGHT:JLabel.LEFT);
+			label.setHorizontalAlignment((column == 1) ? JLabel.RIGHT : JLabel.LEFT);
 			return label;
 		}
 	}
@@ -74,7 +76,7 @@ public class FileList extends JTable {
 			int vColIndex = table.getColumnModel().getColumnIndexAtX(e.getX());
 
 			if (vColIndex != -1) 
-				Sort(vColIndex, asc=(sortMode==vColIndex)?!asc:true);
+				Sort(vColIndex, asc = (sortMode==vColIndex) ? !asc : true);
 		}
 	}
 
@@ -87,20 +89,23 @@ public class FileList extends JTable {
 			this.asc = a;
 		}
 		public static ModelComparator getInstance(int m, boolean a) {
-			if(instances == null) instances = new ModelComparator[4][2];
-			return (instances[m][a?0:1] == null) ? instances[m][a?0:1] = new ModelComparator(m, a) : instances[m][a?0:1];
+			if (instances == null) instances = new ModelComparator[4][2];
+			int j = a ? 0 : 1;
+			return (instances[m][j] == null) ? instances[m][j] = new ModelComparator(m, a) : instances[m][j];
 		}
 		public int compare(Object arg0, Object arg1) {
 			Vector<?> v0 = (Vector<?>)arg0;
 			Vector<?> v1 = (Vector<?>)arg1;
 			int sign = asc?1:-1;
 
-			if(mode == COLUMN_SIZE || mode == COLUMN_DATE) {
+			if (mode == COLUMN_SIZE || mode == COLUMN_DATE) {
 				long s0 = (Long)v0.elementAt(mode);
 				long s1 = (Long)v1.elementAt(mode);
-				return sign * ( (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0) );
-			} else {
+				return sign * ((s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0));
+			} else if (mode == COLUMN_FILENAME || mode == COLUMN_EXT) {
 				return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
+			} else {
+				return 0;
 			}
 		}
 	}
@@ -139,6 +144,8 @@ public class FileList extends JTable {
 
 		this.getTableHeader().addMouseListener(new ColumnHeaderListener());
 		this.addMouseListener(new FileListListener());
+		
+		SftpAdapter.AddListener(this);
 	}
 
 	public static FileList GetInstance() {
@@ -148,7 +155,7 @@ public class FileList extends JTable {
 	public void UpdateList(final String path) {
 		new Thread() {
 			public void run() {
-				SftpAdapter.GetFilesList(path, sortMode);
+				SftpAdapter.GetFilesList(path);
 			}
 		}.start();
 	}
@@ -165,17 +172,16 @@ public class FileList extends JTable {
 			String extension = (in != -1) ? fn.substring(in + 1) : "";
 			Object row[] = {
 					entry.getFilename(),
-					new Long(entry.getAttrs().getSize()),
-					(entry.getAttrs().isDir())?".":extension,
+					(entry.getAttrs().isDir()) ? -1 : new Long(entry.getAttrs().getSize()),
+					(entry.getAttrs().isDir()) ? "." : extension,
 					new Long(entry.getAttrs().getMTime() * 1000L)
 			};
 			model.addRow(row);
 		}
 
-		Sort(COLUMN_FILENAME, true);
+		Sort(sortMode, asc);
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		this.setEnabled(true);
-		DirectoryTree.GetInstance().setEnabled(true);
 	}
 
 	private void Sort(int mode, boolean asc) {
@@ -193,5 +199,16 @@ public class FileList extends JTable {
 			fSize /= 1024.0;
 		}
 		return String.format("%.1f TB", fSize);
+	}
+	
+	public void UpdateStatus(final int type, final Object arg) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				if(type == SftpListener.FILELIST_DONE) {
+					Vector<?> list = (Vector<?>)arg;
+					FileList.GetInstance().UpdateListDone(list);
+				}
+			}
+		});
 	}
 }

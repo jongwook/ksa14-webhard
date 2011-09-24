@@ -15,7 +15,7 @@ import org.ksa14.webhard.sftp.*;
  * 
  * @author Jongwook
  */
-public class DirectoryTree extends JTree implements TreeSelectionListener, TreeWillExpandListener {
+public class DirectoryTree extends JTree implements TreeSelectionListener, TreeWillExpandListener, SftpListener {
 	public static final long serialVersionUID = 0L;
 
 	private static DirectoryTree theInstance;
@@ -52,6 +52,8 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		this.addTreeWillExpandListener(this);
 		this.setRowHeight(20);
 		this.setCellRenderer(new MyTreeCellRenderer());
+		
+		SftpAdapter.AddListener(this);
 	}
 
 	public static DirectoryTree GetInstance() {
@@ -77,6 +79,8 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		}
 		collapsePath(lastPath);
 		expandPath(lastPath);
+		
+		this.setEnabled(true);
 	}
 
 	public void valueChanged(TreeSelectionEvent e) {
@@ -121,7 +125,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 
 				FileList.GetInstance().UpdateList(path.toString());
 			}
-		}.start();		
+		}.start();
 	}
 	
 	public void ChangeDirectory(String directory) {
@@ -129,6 +133,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		for(int i=0; i<lastNode.getChildCount(); ++i) {
 			if(lastNode.getChildAt(i).toString().equals(directory)) {
 				childNode = (DefaultMutableTreeNode)lastNode.getChildAt(i);
+				break;
 			}
 		}
 		if(childNode == null) return;
@@ -136,5 +141,16 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		lastPath = lastPath.pathByAddingChild(lastNode);
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		UpdateNode(lastPath.getPath(), lastNode);
+	}
+	
+	public void UpdateStatus(final int type, final Object arg) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				if(type == SftpListener.DIRLIST_DONE) {
+					Vector<?> dirList = (Vector<?>)arg;
+					DirectoryTree.GetInstance().UpdateTreeDone(dirList);
+				}
+			}
+		});
 	}
 }

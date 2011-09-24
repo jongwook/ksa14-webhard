@@ -1,7 +1,7 @@
 package org.ksa14.webhard.ui;
 
 import java.awt.*;
-import java.util.*;
+//import java.util.*;
 import javax.swing.*;
 
 import org.ksa14.webhard.sftp.*;
@@ -57,16 +57,6 @@ public class WebhardPanel extends JPanel implements SftpListener {
 			public void run() {
 				if(type == SftpListener.INFO && statusBar != null) {
 					statusBar.setText(arg.toString());
-				}
-				
-				if(type == SftpListener.DIRLIST_DONE) {
-					Vector<?> dirList = (Vector<?>)arg;
-					DirectoryTree.GetInstance().UpdateTreeDone(dirList);
-				}
-				
-				if(type == SftpListener.FILELIST_DONE) {
-					Vector<?> list = (Vector<?>)arg;
-					FileList.GetInstance().UpdateListDone(list);
 				}
 				
 				if(type == SftpListener.FAILED){

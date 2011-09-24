@@ -85,7 +85,7 @@ public class SftpAdapter extends SftpPublisher {
 		}
 	}
 
-	public static void GetFilesList(String path, int sortmode) {
+	public static void GetFilesList(String path) {
 		ChannelSftp channel = channels.get("main");
 		synchronized(channel) {
 			// Check connection
