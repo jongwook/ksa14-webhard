@@ -58,7 +58,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	}
 
 	private void UpdateTree(DefaultMutableTreeNode parent, String path) {
-		Vector<String> dirlist = SftpUtil.GetDirectoryList(path);
+		Vector<String> dirlist = SftpAdapter.GetDirectoryList(path);
 		for (int i=0; i<dirlist.size(); i++) {
 			String dir = dirlist.elementAt(i);
 

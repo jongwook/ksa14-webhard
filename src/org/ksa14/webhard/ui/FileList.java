@@ -7,7 +7,7 @@ import java.text.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
-import org.ksa14.webhard.sftp.SftpUtil;
+import org.ksa14.webhard.sftp.SftpAdapter;
 import com.jcraft.jsch.ChannelSftp.*;
 
 /**
@@ -130,7 +130,7 @@ public class FileList extends JTable {
 	}
 
 	public void UpdateList(String path) {
-		Vector<LsEntry> list = SftpUtil.GetFilesList(path, sortMode);
+		Vector<LsEntry> list = SftpAdapter.GetFilesList(path, sortMode);
 
 		DefaultTableModel model = (DefaultTableModel)this.getModel();
 		while(model.getRowCount() > 0)
