@@ -32,10 +32,11 @@ public class WebhardPanel extends JPanel {
 		this.tree = new DirectoryTree(new DefaultMutableTreeNode("KSA14 Webhard"));
 		JScrollPane SPTree = new JScrollPane(this.tree);
 		SPTree.setPreferredSize(new Dimension(200, 600));
-		this.add(SPTree, BorderLayout.LINE_START);
 		
 		// Initialize the file list 
 		this.files = new FileList();
-		this.add(new JScrollPane(this.files), BorderLayout.CENTER);
+		JScrollPane SPList = new JScrollPane(this.files);
+		
+		this.add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, SPTree, SPList), BorderLayout.CENTER);
 	}
 }
