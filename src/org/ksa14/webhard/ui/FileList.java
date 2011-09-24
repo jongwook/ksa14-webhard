@@ -104,9 +104,8 @@ public class FileList extends JTable implements SftpListener {
 				return sign * ((s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0));
 			} else if (mode == COLUMN_FILENAME || mode == COLUMN_EXT) {
 				return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
-			} else {
-				return 0;
-			}
+			} 
+			return 0;
 		}
 	}
 	
@@ -130,10 +129,6 @@ public class FileList extends JTable implements SftpListener {
 	 */
 	private FileList() {
 		super(FileList.model);
-
-		// swing internal property to act like file chooser. 
-		// might not be a good idea to use this private API
-		this.putClientProperty("Table.isFileList", Boolean.TRUE);
 
 		this.setCellSelectionEnabled(true);
 		this.setIntercellSpacing(new Dimension(3,3));
