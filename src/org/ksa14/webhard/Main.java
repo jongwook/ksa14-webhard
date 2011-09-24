@@ -14,11 +14,8 @@ public class Main {
 	 * @param args the command line arguments. will not be used.
 	 */
 	public static void main(String ... args) {
-		// Check authentication
-		if (!AuthDialog.Authenticate())
-			return;
-		
-		// Open the main window if the authentication was successful.
-		new WebhardFrame();
+		// Check authentication and open the main window if the authentication was successful.
+		if (AuthDialog.Authenticate())
+			WebhardFrame.Open();
 	}
 }
