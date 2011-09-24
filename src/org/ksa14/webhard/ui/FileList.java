@@ -25,12 +25,12 @@ public class FileList extends JTable {
 	public static final String columns[] = {"이름", "크기", "종류", "날짜"};
 	public static final Object rows[][] = {};
 
-	public static final int SORT_FILENAME		= 0;
-	public static final int SORT_SIZE			= 1;
-	public static final int SORT_EXT			= 2;
-	public static final int SORT_DATE			= 3;
+	public static final int COLUMN_FILENAME		= 0;
+	public static final int COLUMN_SIZE			= 1;
+	public static final int COLUMN_EXT			= 2;
+	public static final int COLUMN_DATE			= 3;
 
-	public static int sortMode = SORT_FILENAME;
+	public static int sortMode = COLUMN_FILENAME;
 	public static boolean asc = true;
 
 	/**
@@ -52,18 +52,18 @@ public class FileList extends JTable {
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {			
 			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			String text = value.toString();
-
+			String extension = (String)table.getModel().getValueAt(row, FileList.COLUMN_EXT);
+			
 			if (column == 0){
 				label.setText(text);
-				label.setIcon(IconManager.Get(text));
-				label.setHorizontalAlignment(JLabel.LEFT);
+				label.setIcon(FileInfo.GetIcon(extension));
 			} else {
-				label.setIcon(null);
-				label.setHorizontalAlignment(JLabel.RIGHT);
+				label.setIcon(null);				
 				if (column == 1) label.setText(FileSize((Long)value));
-				if (column == 2) label.setText(text.toUpperCase() + " 파일");
+				if (column == 2) label.setText(FileInfo.GetDescription(text));
 				if (column == 3) label.setText(dateFormat.format(new Date((Long)value)));
 			} 
+			label.setHorizontalAlignment((column == 1)?JLabel.RIGHT:JLabel.LEFT);
 			return label;
 		}
 	}
@@ -95,7 +95,7 @@ public class FileList extends JTable {
 			Vector<?> v1 = (Vector<?>)arg1;
 			int sign = asc?1:-1;
 
-			if(mode == SORT_SIZE || mode == SORT_DATE) {
+			if(mode == COLUMN_SIZE || mode == COLUMN_DATE) {
 				long s0 = (Long)v0.elementAt(mode);
 				long s1 = (Long)v1.elementAt(mode);
 				return sign * ( (s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0) );
@@ -150,14 +150,16 @@ public class FileList extends JTable {
 			Object row[] = {
 					entry.getFilename(),
 					new Long(entry.getAttrs().getSize()),
-					extension,
+					(entry.getAttrs().isDir())?".":extension,
 					new Long(entry.getAttrs().getMTime() * 1000L)
 			};
 			model.addRow(row);
 		}
 
-		Sort(SORT_FILENAME, true);
+		Sort(COLUMN_FILENAME, true);
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		this.setEnabled(true);
+		DirectoryTree.GetInstance().setEnabled(true);
 	}
 
 	private void Sort(int mode, boolean asc) {

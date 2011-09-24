@@ -102,7 +102,7 @@ public class SftpAdapter extends SftpPublisher {
 					if (item instanceof LsEntry) {
 						LsEntry entry = (LsEntry)item;
 						String filename = entry.getFilename();
-						if ((filename.compareTo(".") != 0) && (filename.compareTo("..") != 0) && (filename.compareTo("recycle_bin") != 0) && !entry.getAttrs().isDir())
+						if ((filename.compareTo(".") != 0) && (filename.compareTo("..") != 0) && (filename.compareTo("recycle_bin") != 0))
 							retv.add(entry);
 					}
 				}

@@ -101,7 +101,9 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	public void treeWillCollapse(TreeExpansionEvent e) {}
 
 	public void UpdateNode(final Object paths[], final DefaultMutableTreeNode node) {
-		if(node == null) return;				
+		if(node == null) return;
+		this.setEnabled(false);
+		FileList.GetInstance().setEnabled(false);
 		new Thread() { 
 			public void run() {
 				StringBuffer path = new StringBuffer();

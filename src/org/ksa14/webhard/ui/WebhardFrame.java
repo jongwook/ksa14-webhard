@@ -1,6 +1,7 @@
 package org.ksa14.webhard.ui;
 
 import java.awt.*;
+
 import javax.swing.*;
 
 /**
@@ -40,6 +41,9 @@ public class WebhardFrame extends JFrame{
 		
 		// Add the main panel
 		this.add(new WebhardPanel());
+		
+		// Show the wait cursor until the file list loads up
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		// Finally, show the window up
 		this.setVisible(true);
