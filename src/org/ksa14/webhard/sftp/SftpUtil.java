@@ -66,11 +66,12 @@ public class SftpUtil {
 			e.printStackTrace();
 			retv = null;
 		}
-
+		
+		Collections.sort(retv, String.CASE_INSENSITIVE_ORDER);
 		return retv;
 	}
 
-	public static Vector<LsEntry> GetFilesList(String path) {
+	public static Vector<LsEntry> GetFilesList(String path, int sortmode) {
 		// Check connection
 		if (!SUChannel.isConnected())
 			return null;
@@ -92,7 +93,7 @@ public class SftpUtil {
 			e.printStackTrace();
 			retv = null;
 		}
-
+		
 		return retv;
 	}
 }
