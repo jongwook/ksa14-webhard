@@ -1,6 +1,7 @@
 package org.ksa14.webhard.ui;
 
 import java.awt.*;
+import java.net.URL;
 
 import javax.swing.*;
 
@@ -24,6 +25,11 @@ public class WebhardFrame extends JFrame{
 		
 		// Try to set system native look-and-feel
 		SwingUtility.setSystemLookAndFeel();
+		
+		// Load Icon
+		URL urlIcon = getClass().getResource("/res/icon48.png");
+		Image image = Toolkit.getDefaultToolkit().getImage(urlIcon);
+		this.setIconImage(image);	
 		
 		// Make the process terminate when the window is closed 
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

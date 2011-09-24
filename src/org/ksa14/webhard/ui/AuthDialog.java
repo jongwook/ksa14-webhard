@@ -34,25 +34,25 @@ public class AuthDialog extends JDialog implements SftpListener {
 		loginPanel.setBackground(Color.white);
 
 		// Load KSA logo image
-		ImageIcon IconLogo;
-		URL UrlLogo = getClass().getResource("/res/ksa.jpg");
-		if (UrlLogo != null) {
-			IconLogo = new ImageIcon(UrlLogo);
+		ImageIcon iconLogo;
+		URL urlLogo = getClass().getResource("/res/ksa.jpg");
+		if (urlLogo != null) {
+			iconLogo = new ImageIcon(urlLogo);
 
 			JLabel LabelLogo = new JLabel("");
-			LabelLogo.setBounds(25, 25, IconLogo.getIconWidth(), IconLogo.getIconHeight());
-			LabelLogo.setIcon(IconLogo);
+			LabelLogo.setBounds(25, 25, iconLogo.getIconWidth(), iconLogo.getIconHeight());
+			LabelLogo.setIcon(iconLogo);
 			loginPanel.add(LabelLogo);
 		}
 
 		// Add components to input login information
-		JLabel LabelID = new JLabel("학번");
-		LabelID.setBounds(195, 30, 60, 15);
-		loginPanel.add(LabelID);
+		JLabel labelID = new JLabel("학번");
+		labelID.setBounds(195, 30, 60, 15);
+		loginPanel.add(labelID);
 
-		JLabel LabelPW = new JLabel("비밀번호");
-		LabelPW.setBounds(195, 70, 60, 15);
-		loginPanel.add(LabelPW);
+		JLabel labelPW = new JLabel("비밀번호");
+		labelPW.setBounds(195, 70, 60, 15);
+		loginPanel.add(labelPW);
 
 		textID = new JTextField();
 		textID.setBounds(260, 27, 155, 21);
