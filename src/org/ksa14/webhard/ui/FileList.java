@@ -52,7 +52,7 @@ public class FileList extends JTable {
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {			
 			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			String text = value.toString();
-			
+
 			if (column == 0){
 				label.setText(text);
 				label.setIcon(IconManager.Get(text));
@@ -129,14 +129,21 @@ public class FileList extends JTable {
 		return (theInstance == null) ? theInstance = new FileList() : theInstance;
 	}
 
-	public void UpdateList(String path) {
-		Vector<LsEntry> list = SftpAdapter.GetFilesList(path, sortMode);
+	public void UpdateList(final String path) {
+		new Thread() {
+			public void run() {
+				SftpAdapter.GetFilesList(path, sortMode);
+			}
+		}.start();
+	}
 
+	public void UpdateListDone(Vector<?> list) {	
 		DefaultTableModel model = (DefaultTableModel)this.getModel();
 		while(model.getRowCount() > 0)
 			model.removeRow(0);
 
-		for(LsEntry entry : list) {
+		for(Object obj : list) {
+			LsEntry entry = (LsEntry)obj;
 			String fn = entry.getFilename();
 			int in = fn.lastIndexOf('.');
 			String extension = (in != -1) ? fn.substring(in + 1) : "";
@@ -150,6 +157,7 @@ public class FileList extends JTable {
 		}
 
 		Sort(SORT_FILENAME, true);
+		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 
 	private void Sort(int mode, boolean asc) {

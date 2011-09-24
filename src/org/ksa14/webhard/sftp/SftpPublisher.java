@@ -23,10 +23,10 @@ public class SftpPublisher {
 		}
 	}
 	
-	public static void UpdateStatus(String status, int arg) {
+	public static void UpdateStatus(int type, Object arg) {
 		synchronized(listeners) {
 			for(SftpListener listener : listeners) {
-				listener.UpdateStatus(status, arg);
+				listener.UpdateStatus(type, arg);
 			}
 		}
 	}

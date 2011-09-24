@@ -7,13 +7,14 @@ import javax.swing.*;
 
 import org.ksa14.webhard.sftp.*;
 
-public class AuthDialog extends JDialog implements SftpListener{
+public class AuthDialog extends JDialog implements SftpListener {
 	private static final long serialVersionUID = 0L;
 	public static final int wWidth = 460;
 	public static final int wHeight = 200;
 
 	private JTextField textID;
 	private JPasswordField textPW;
+	private JButton btnConnect, btnExit;
 	private JLabel statusBar;
 	private static boolean authed = false;	
 
@@ -71,24 +72,24 @@ public class AuthDialog extends JDialog implements SftpListener{
 		loginPanel.add(textPW);
 
 		// Add buttons to connect or exit
-		JButton BtnConnect = new JButton("접속");
-		BtnConnect.setBounds(290, 115, 60, 25);
-		BtnConnect.addActionListener(new ActionListener() {
+		this.btnConnect = new JButton("접속");
+		btnConnect.setBounds(290, 115, 60, 25);
+		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				RequestAuth(textID.getText(), new String(textPW.getPassword()));
 			}
 		});
-		loginPanel.add(BtnConnect);
+		loginPanel.add(btnConnect);
 
-		JButton BtnExit = new JButton("종료");
-		BtnExit.setBounds(355, 115, 60, 25);
-		BtnExit.addActionListener(new ActionListener() {
+		this.btnExit = new JButton("종료");
+		btnExit.setBounds(355, 115, 60, 25);
+		btnExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				authed = false;
 				dispose();
 			}
 		});
-		loginPanel.add(BtnExit);
+		loginPanel.add(btnExit);
 
 		this.add(loginPanel, BorderLayout.CENTER);
 
@@ -119,16 +120,15 @@ public class AuthDialog extends JDialog implements SftpListener{
 			JOptionPane.showMessageDialog(null, "학번과 비밀번호를 입력해주세요", "KSA14 Webhard Login", JOptionPane.WARNING_MESSAGE);
 			return false;
 		}
+		
+		this.btnConnect.setEnabled(false);
 
 		// Try to authenticate
 		SftpAdapter.AddListener(this);
 
 		new Thread() {
 			public void run() {
-				if (!SftpAdapter.Connect(id, pw)) {
-					JOptionPane.showMessageDialog(null, "접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
-					UpdateStatus("failed", -1);
-				}
+				SftpAdapter.Connect(id, pw);
 			}
 		}.start();
 
@@ -136,22 +136,28 @@ public class AuthDialog extends JDialog implements SftpListener{
 		return true;
 	}
 
-	public void UpdateStatus(final String status, final int arg) {
+	public void UpdateStatus(final int type, final Object arg) {
 		SwingUtilities.invokeLater( new Runnable() {
 			public void run() {
-				if(statusBar != null)
-					statusBar.setText(status);
+				if(type == SftpListener.INFO && statusBar != null)
+					statusBar.setText(arg.toString());
 
-				if(arg == SftpListener.SFTP_FAILED) {
+				if(type == SftpListener.FAILED) {
 					authed = false;
 					dispose();
+					JOptionPane.showMessageDialog(null, "접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
 				}
 
-				if(arg == SftpListener.SFTP_SUCCEED) {
+				if(type == SftpListener.SUCCEED) {
 					authed = true;
 					dispose();
 				}
 			}
 		});
+	}
+	
+	public void dispose() {
+		SftpAdapter.RemoveListener(this);
+		super.dispose();
 	}
 }

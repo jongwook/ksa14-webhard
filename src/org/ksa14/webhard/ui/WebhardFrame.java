@@ -12,12 +12,12 @@ public class WebhardFrame extends JFrame{
 	public static final long serialVersionUID=0L;
 	public static final int wWidth = 800;
 	public static final int wHeight = 600;
-	
+	public static WebhardFrame theInstance;
 	/**
 	 * Initialize the main webhard window. 
 	 * GUI components are initialized by WebhardPanel class.
 	 */
-	public WebhardFrame() {
+	private WebhardFrame() {
 		// Create the main window with the title
 		super("KSA14 Webhard Client");
 		
@@ -43,5 +43,13 @@ public class WebhardFrame extends JFrame{
 		
 		// Finally, show the window up
 		this.setVisible(true);
+	}
+	
+	public static WebhardFrame GetInstance() {
+		return (theInstance == null) ? theInstance=new WebhardFrame() : theInstance;
+	}
+	
+	public static void Open() {
+		GetInstance();
 	}
 }
