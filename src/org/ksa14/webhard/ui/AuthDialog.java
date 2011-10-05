@@ -39,10 +39,10 @@ public class AuthDialog extends JDialog implements SftpListener {
 		if (urlLogo != null) {
 			iconLogo = new ImageIcon(urlLogo);
 
-			JLabel LabelLogo = new JLabel("");
-			LabelLogo.setBounds(25, 25, iconLogo.getIconWidth(), iconLogo.getIconHeight());
-			LabelLogo.setIcon(iconLogo);
-			loginPanel.add(LabelLogo);
+			JLabel labelLogo = new JLabel("");
+			labelLogo.setBounds(25, 25, iconLogo.getIconWidth(), iconLogo.getIconHeight());
+			labelLogo.setIcon(iconLogo);
+			loginPanel.add(labelLogo);
 		}
 
 		// Add components to input login information

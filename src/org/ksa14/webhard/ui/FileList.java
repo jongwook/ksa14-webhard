@@ -3,6 +3,7 @@ package org.ksa14.webhard.ui;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.net.URL;
 import java.text.*;
 import javax.swing.*;
 import javax.swing.table.*;
@@ -33,7 +34,7 @@ public class FileList extends JTable implements SftpListener {
 	public static final int COLUMN_DATE			= 3;
 
 	public static int sortMode = COLUMN_FILENAME;
-	public static boolean asc = true;
+	public static boolean sortAsc = true;
 
 	/**
 	 * The default table model 
@@ -51,7 +52,7 @@ public class FileList extends JTable implements SftpListener {
 		public static MyTableCellRenderer getInstance() {
 			return (theInstance == null) ? theInstance = new MyTableCellRenderer() : theInstance;
 		}
-		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {			
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {		
 			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			String text = value.toString();
 			String extension = (String)table.getModel().getValueAt(row, FileList.COLUMN_EXT);
@@ -60,7 +61,7 @@ public class FileList extends JTable implements SftpListener {
 				label.setText(text);
 				label.setIcon(FileInfo.GetIcon(extension));
 			} else {
-				label.setIcon(null);				
+				label.setIcon(null);
 				if (column == 1) label.setText(((Long)value < 0) ? "" : FileSize((Long)value));
 				if (column == 2) label.setText(FileInfo.GetDescription(text));
 				if (column == 3) label.setText(dateFormat.format(new Date((Long)value)));
@@ -69,17 +70,51 @@ public class FileList extends JTable implements SftpListener {
 			return label;
 		}
 	}
-
-	public class ColumnHeaderListener extends MouseAdapter {
+	
+	public static class MyTableHeaderRenderer extends DefaultTableCellRenderer {
+		public static final long serialVersionUID = 0L;
+		private static MyTableHeaderRenderer theInstance;
+		private TableCellRenderer prevRenderer;
+		public static MyTableHeaderRenderer getInstance() {
+			return (theInstance == null) ? theInstance = new MyTableHeaderRenderer() : theInstance;
+		}
+		public MyTableHeaderRenderer setOriginalTableCellRenderer(TableCellRenderer tcr) {
+			this.prevRenderer = tcr;
+			return this;
+		}
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {	
+			JLabel label = (JLabel)prevRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			
+			if (column == FileList.sortMode) {
+				URL urlIcon = FileList.GetInstance().getClass().getResource("/res/sort_" + ((FileList.sortAsc) ? "asc" : "desc") + ".png");
+				label.setIcon(new ImageIcon(urlIcon));
+				label.setHorizontalTextPosition(SwingConstants.LEFT);
+			}
+			
+			return label;
+		}
+	}
+	
+	public class ColumnHeaderMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
 			JTable table = FileList.GetInstance();
 			int vColIndex = table.getColumnModel().getColumnIndexAtX(e.getX());
 
 			if (vColIndex != -1) 
-				Sort(vColIndex, asc = (sortMode==vColIndex) ? !asc : true);
+				Sort(vColIndex, (sortMode==vColIndex) ? !sortAsc : true);
+			//table.repaint();
 		}
 	}
+	
+	public class ColumnHeaderMotionListener implements MouseMotionListener {
+		public void mouseDragged(MouseEvent e) {
+			FileList.GetInstance().getTableHeader().setDraggedColumn(null);
+		}
+		
+		public void mouseMoved(MouseEvent e) {}
+	}
 
+	// comparator for sorting file list
 	private static class ModelComparator implements Comparator<Object> {
 		private int mode = 0;
 		private boolean asc = true;
@@ -116,10 +151,8 @@ public class FileList extends JTable implements SftpListener {
 				JTable table = (JTable)e.getSource();
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
-				if(model.getValueAt(row, COLUMN_EXT).equals(".")) {
-					// this is a folder
+				if(model.getValueAt(row, COLUMN_EXT).equals("."))	// this is a folder
 					DirectoryTree.GetInstance().ChangeDirectory((String)model.getValueAt(row, COLUMN_FILENAME));
-				}
 			}
 		}
 	}
@@ -137,7 +170,10 @@ public class FileList extends JTable implements SftpListener {
 		this.setDefaultRenderer(Object.class, MyTableCellRenderer.getInstance());
 		this.setRowHeight(20);
 
-		this.getTableHeader().addMouseListener(new ColumnHeaderListener());
+		JTableHeader header = this.getTableHeader();
+		header.setDefaultRenderer(MyTableHeaderRenderer.getInstance().setOriginalTableCellRenderer(this.getTableHeader().getDefaultRenderer()));
+		header.addMouseMotionListener(new ColumnHeaderMotionListener());
+		header.addMouseListener(new ColumnHeaderMouseListener());
 		this.addMouseListener(new FileListListener());
 		
 		SftpAdapter.AddListener(this);
@@ -157,8 +193,7 @@ public class FileList extends JTable implements SftpListener {
 
 	public void UpdateListDone(Vector<?> list) {	
 		DefaultTableModel model = (DefaultTableModel)this.getModel();
-		while(model.getRowCount() > 0)
-			model.removeRow(0);
+		model.setRowCount(0);
 
 		for(Object obj : list) {
 			LsEntry entry = (LsEntry)obj;
@@ -174,7 +209,7 @@ public class FileList extends JTable implements SftpListener {
 			model.addRow(row);
 		}
 
-		Sort(sortMode, asc);
+		Sort(sortMode, sortAsc);
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		this.setEnabled(true);
 	}
@@ -183,6 +218,7 @@ public class FileList extends JTable implements SftpListener {
 		Vector<?> mv = model.getDataVector();
 		Collections.sort(mv, ModelComparator.getInstance(mode, asc));
 		sortMode = mode;
+		sortAsc = asc;
 	}
 
 	private static String FileSize(long size) {
