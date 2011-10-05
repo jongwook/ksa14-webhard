@@ -146,6 +146,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		lastPath = lastPath.pathByAddingChild(lastNode);
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		UpdateNode(lastPath.getPath(), lastNode);
+		setSelectionPath(lastPath);
 	}
 	
 	public void UpdateStatus(final int type, final Object arg) {

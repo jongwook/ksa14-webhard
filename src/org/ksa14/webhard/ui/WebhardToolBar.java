@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
 import javax.swing.*;
-import javax.swing.JToolBar.*;
 
 public class WebhardToolBar extends JToolBar {
 	public static final long serialVersionUID = 0L;
@@ -61,17 +60,6 @@ public class WebhardToolBar extends JToolBar {
 		boxSearch.add(new WebhardToolBarButton(getClass().getResource("/res/search.png"), "검색", "search"));
 		boxSearch.add(new Separator(new Dimension(2, 0)));
 		this.add(boxSearch, BorderLayout.EAST);
-		
-		/*
-		this.addSeparator(new Dimension(3, 0));
-		this.add(new WebhardToolBarButton(getClass().getResource("/res/exit.png"), "종료", "exit"));
-		this.addSeparator(new Dimension(10, 32));
-		this.add(Box.createHorizontalGlue());
-		JTextField txtSearch = new JTextField(15);
-		this.add(txtSearch);
-		this.add(new WebhardToolBarButton(getClass().getResource("/res/search.png"), "검색", "search"));		
-		this.addSeparator(new Dimension(3, 0));
-		*/
 		
 		this.setFloatable(false);
 	}
