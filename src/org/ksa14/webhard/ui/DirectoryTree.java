@@ -85,7 +85,7 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 
 	public void valueChanged(TreeSelectionEvent e) {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)getLastSelectedPathComponent();
-		if(node == top || node == lastNode) return;
+		if(node == lastNode) return;
 		lastPath = e.getPath();
 		lastNode = node;
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -125,7 +125,10 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 					UpdateStatus(SftpListener.DIRLIST_DONE, new Vector<Object>());
 				}
 
-				FileList.GetInstance().UpdateList(path.toString());
+				if (path.length() == 0)
+					FileList.GetInstance().UpdateList("/");
+				else
+					FileList.GetInstance().UpdateList(path.toString());
 			}
 		}.start();
 	}

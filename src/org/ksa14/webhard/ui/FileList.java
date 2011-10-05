@@ -3,7 +3,7 @@ package org.ksa14.webhard.ui;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-import java.net.URL;
+import java.net.*;
 import java.text.*;
 import javax.swing.*;
 import javax.swing.table.*;
@@ -102,7 +102,6 @@ public class FileList extends JTable implements SftpListener {
 
 			if (vColIndex != -1) 
 				Sort(vColIndex, (sortMode==vColIndex) ? !sortAsc : true);
-			//table.repaint();
 		}
 	}
 	

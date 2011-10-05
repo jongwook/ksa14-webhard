@@ -1,7 +1,6 @@
 package org.ksa14.webhard.ui;
 
 import java.awt.*;
-//import java.util.*;
 import javax.swing.*;
 
 import org.ksa14.webhard.sftp.*;
