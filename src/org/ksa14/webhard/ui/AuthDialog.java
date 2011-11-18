@@ -131,6 +131,10 @@ public class AuthDialog extends JDialog implements MsgListener {
 		// Remove message listener from broadcaster
 		MsgBroadcaster.RemoveListener(this);
 		MsgBroadcaster.RemoveListener(statusBar);
+		
+		if (!authed)
+			SftpAdapter.Disconnect();
+		
 		super.dispose();
 	}
 	

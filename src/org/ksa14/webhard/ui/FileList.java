@@ -173,13 +173,21 @@ public class FileList extends JTable implements MsgListener {
 		public int compare(Object arg0, Object arg1) {
 			Vector<?> v0 = (Vector<?>)arg0;
 			Vector<?> v1 = (Vector<?>)arg1;
-			int sign = asc?1:-1;
+			int sign = asc ? 1 : -1;
 
 			if (mode == COLUMN_SIZE || mode == COLUMN_DATE) {
 				long s0 = (Long)v0.elementAt(mode);
 				long s1 = (Long)v1.elementAt(mode);
 				return sign * ((s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0));
-			} else if (mode == COLUMN_FILENAME || mode == COLUMN_EXT) {
+			} else if (mode == COLUMN_FILENAME) {
+				boolean s0 = (((String)v0.elementAt(COLUMN_EXT)).compareTo(".") == 0);
+				boolean s1 = (((String)v1.elementAt(COLUMN_EXT)).compareTo(".") == 0);
+				
+				if (s0 ^ s1)
+					return (s0 ? -sign : sign);
+				else
+					return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
+			} else if (mode == COLUMN_EXT) {
 				return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
 			} 
 			return 0;

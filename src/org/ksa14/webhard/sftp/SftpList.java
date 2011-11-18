@@ -16,14 +16,14 @@ public class SftpList {
 		// Check connection
 		if (!SftpAdapter.IsConnected()) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되어 있지 않습니다");
-			MsgBroadcaster.BroadcastMsg(MsgListener.DIRTREE_FAIL, "서버에 접속되어 있지 않습니다");
+			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_FAIL, "서버에 접속되어 있지 않습니다");
 			return;
 		}
 		ChannelSftp channel = SftpAdapter.getChannel("main");
 		if (!channel.isConnected()) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되어 있지 않습니다");
-			MsgBroadcaster.BroadcastMsg(MsgListener.DIRTREE_FAIL, "서버에 접속되어 있지 않습니다");
-			return;			
+			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_FAIL, "서버에 접속되어 있지 않습니다");
+			return;	
 		}
 		
 		// Get directory list from sftp
@@ -60,14 +60,14 @@ public class SftpList {
 		// Check connection
 		if (!SftpAdapter.IsConnected()) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되어 있지 않습니다");
-			MsgBroadcaster.BroadcastMsg(MsgListener.FILELIST_FAIL, "서버에 접속되어 있지 않습니다");
+			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_FAIL, "서버에 접속되어 있지 않습니다");
 			return;
 		}
 		ChannelSftp channel = SftpAdapter.getChannel("main");
 		if (!channel.isConnected()) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되어 있지 않습니다");
-			MsgBroadcaster.BroadcastMsg(MsgListener.FILELIST_FAIL, "서버에 접속되어 있지 않습니다");
-			return;			
+			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_FAIL, "서버에 접속되어 있지 않습니다");
+			return;	
 		}
 		
 		// Get directory list from sftp
@@ -84,7 +84,7 @@ public class SftpList {
 						String fileName = ((LsEntry)curObj).getFilename();
 						if (fileName.compareTo("recycle_bin") != 0)
 							fileV.add((LsEntry)curObj);
-					}					
+					}
 				}
 			} catch (SftpException e) {
 				MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일 탐색에 실패했습니다");

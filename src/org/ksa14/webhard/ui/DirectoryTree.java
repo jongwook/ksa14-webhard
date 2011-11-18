@@ -118,13 +118,8 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 					SftpList.GetDirectoryList(path.toString());
 				} else {
 					MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "디렉토리 탐색 완료");
-					UpdateTreeDone(new Vector<Object>());
+					MsgBroadcaster.BroadcastMsg(MsgListener.DIRTREE_DONE, new Vector<Object>());
 				}
-
-				if (path.length() == 0)
-					FileList.GetInstance().UpdateList("/");
-				else
-					FileList.GetInstance().UpdateList(path.toString());
 			}
 		}.start();
 	}
@@ -173,8 +168,23 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if (type == MsgListener.DIRTREE_DONE)
+				if (type == MsgListener.DIRTREE_DONE) {
 					GetInstance().UpdateTreeDone((Vector<?>)arg);
+
+					new Thread() { 
+						public void run() {
+							Object paths[] = lastPath.getPath();
+							StringBuffer path = new StringBuffer();
+							for (int depth = 1; depth < paths.length; depth++)
+								path.append("/" + paths[depth]);
+							
+							if (path.length() == 0)
+								FileList.GetInstance().UpdateList("/");
+							else
+								FileList.GetInstance().UpdateList(path.toString());
+						}
+					}.start();
+				}
 				
 				if (type == MsgListener.DIRTREE_FAIL)
 					GetInstance().UpdateTreeDone(new Vector<Object>());

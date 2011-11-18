@@ -35,10 +35,18 @@ public class WebhardPanel extends JPanel implements MsgListener {
 		
 		// Set layout
 		setLayout(new BorderLayout());
+		
+		// Initialize the status bar
+		statusBar = new StatusBarLabel("준비 중");
+		add(this.statusBar, BorderLayout.SOUTH);
+		
+		// Add message listener to broadcaster
+		MsgBroadcaster.AddListener(this);
+		MsgBroadcaster.AddListener(statusBar);
 
 		// Initialize the tool bar
 		toolBar = new WebhardToolBar();
-		add(this.toolBar, BorderLayout.PAGE_START);
+		add(this.toolBar, BorderLayout.NORTH);
 
 		// Initialize the directory tree
 		dirTree = DirectoryTree.GetInstance();
@@ -51,13 +59,6 @@ public class WebhardPanel extends JPanel implements MsgListener {
 		SPList.getViewport().setBackground(Color.white);
 		
 		add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, SPTree, SPList), BorderLayout.CENTER);
-		
-		// Initialize the status bar
-		statusBar = new StatusBarLabel("준비 중");
-		add(this.statusBar, BorderLayout.PAGE_END);
-		
-		MsgBroadcaster.AddListener(this);
-		MsgBroadcaster.AddListener(statusBar);
 	}
 
 	@Override
@@ -65,8 +66,11 @@ public class WebhardPanel extends JPanel implements MsgListener {
 		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if ((type == MsgListener.DIRTREE_FAIL) || (type == MsgListener.FILELIST_FAIL))
+				if (type == MsgListener.CONNECT_FAIL) {
 					JOptionPane.showMessageDialog(null, arg.toString(), "KSA14 Webhard", JOptionPane.ERROR_MESSAGE);
+					dirTree.setEnabled(false);
+					files.setEnabled(false);
+				}
 			}
 		});
 	}

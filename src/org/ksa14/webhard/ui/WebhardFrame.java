@@ -5,6 +5,8 @@ import java.net.URL;
 
 import javax.swing.*;
 
+import org.ksa14.webhard.sftp.SftpAdapter;
+
 /**
  * WebhardFrame is a JFrame subclass that represents the main window 
  * 
@@ -48,9 +50,6 @@ public class WebhardFrame extends JFrame{
 		// Add the main panel
 		add(new WebhardPanel());
 		
-		// Show the wait cursor until the file list loads up
-		// setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		
 		// Finally, show the window up
 		setVisible(true);
 	}
@@ -64,7 +63,9 @@ public class WebhardFrame extends JFrame{
 	}
 	
 	public static void Exit() {
-		if (JOptionPane.showOptionDialog(null, "KSA14 Webhard 를 종료합니다", "KSA14 Webhard Client", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null) == 0)
+		if (JOptionPane.showOptionDialog(null, "KSA14 Webhard 를 종료합니다", "KSA14 Webhard Client", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null) == 0) {
+			SftpAdapter.Disconnect();
 			System.exit(0);
+		}
 	}
 }
