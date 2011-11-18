@@ -1,9 +1,12 @@
 package org.ksa14.webhard.ui;
 
-import java.io.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.filechooser.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.UUID;
+
+import javax.swing.Icon;
+import javax.swing.filechooser.FileSystemView;
 
 public class FileInfo {
 	private FileInfo() {}
@@ -19,10 +22,10 @@ public class FileInfo {
 					file.delete();
 					file.mkdir();
 				}
-				if(view == null) {
+				if(view == null)
 					view = FileSystemView.getFileSystemView();
-				}
 				icons.put(extension, view.getSystemIcon(file));
+				
 				return icons.get(extension);
 			} catch(IOException e) {
 				System.err.println("Error searching the system icon for " + extension);
@@ -33,7 +36,8 @@ public class FileInfo {
 	}
 
 	public static String GetDescription(String extension) {
-		if(extension.equals(".")) return "폴더 ";
+		if(extension.equals("."))
+			return "폴더 ";
 		return GetIcon(extension).toString();
 	}
 }

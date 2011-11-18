@@ -1,24 +1,43 @@
 package org.ksa14.webhard.ui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.net.*;
-import java.text.*;
-import javax.swing.*;
-import javax.swing.table.*;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Vector;
 
-import org.ksa14.webhard.sftp.SftpAdapter;
-import org.ksa14.webhard.sftp.SftpListener;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 
-import com.jcraft.jsch.ChannelSftp.*;
+import org.ksa14.webhard.MsgBroadcaster;
+import org.ksa14.webhard.MsgListener;
+import org.ksa14.webhard.sftp.SftpList;
+
+import com.jcraft.jsch.ChannelSftp.LsEntry;
 
 /**
  * FileList represents the GUI component that shows lists of files in the directory selected in DirectoryTree component 
  * 
  * @author Jongwook
  */
-public class FileList extends JTable implements SftpListener {
+public class FileList extends JTable implements MsgListener {
 	public static final long serialVersionUID = 0L;
 
 	private static FileList theInstance;
@@ -41,6 +60,7 @@ public class FileList extends JTable implements SftpListener {
 	 */
 	protected static DefaultTableModel model = new DefaultTableModel(FileList.rows, FileList.columns) {
 		public static final long serialVersionUID = 0L;
+		
 		public boolean isCellEditable(int row, int column) {
 			return false;
 		}
@@ -48,18 +68,21 @@ public class FileList extends JTable implements SftpListener {
 
 	public static class MyTableCellRenderer extends DefaultTableCellRenderer {
 		public static final long serialVersionUID = 0L;
+		
 		private static MyTableCellRenderer theInstance;
+		
 		public static MyTableCellRenderer getInstance() {
 			return (theInstance == null) ? theInstance = new MyTableCellRenderer() : theInstance;
 		}
+		
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {		
 			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			String text = value.toString();
-			String extension = (String)table.getModel().getValueAt(row, FileList.COLUMN_EXT);
+			String ext = (String)table.getModel().getValueAt(row, FileList.COLUMN_EXT);
 			
 			if (column == 0){
 				label.setText(text);
-				label.setIcon(FileInfo.GetIcon(extension));
+				label.setIcon(FileInfo.GetIcon(ext));
 			} else {
 				label.setIcon(null);
 				if (column == 1) label.setText(((Long)value < 0) ? "" : FileSize((Long)value));
@@ -73,15 +96,19 @@ public class FileList extends JTable implements SftpListener {
 	
 	public static class MyTableHeaderRenderer extends DefaultTableCellRenderer {
 		public static final long serialVersionUID = 0L;
+		
 		private static MyTableHeaderRenderer theInstance;
 		private TableCellRenderer prevRenderer;
+		
 		public static MyTableHeaderRenderer getInstance() {
 			return (theInstance == null) ? theInstance = new MyTableHeaderRenderer() : theInstance;
 		}
+		
 		public MyTableHeaderRenderer setOriginalTableCellRenderer(TableCellRenderer tcr) {
-			this.prevRenderer = tcr;
+			prevRenderer = tcr;
 			return this;
 		}
+		
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {	
 			JLabel label = (JLabel)prevRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			
@@ -101,7 +128,7 @@ public class FileList extends JTable implements SftpListener {
 			int vColIndex = table.getColumnModel().getColumnIndexAtX(e.getX());
 
 			if (vColIndex != -1) 
-				Sort(vColIndex, (sortMode==vColIndex) ? !sortAsc : true);
+				Sort(vColIndex, (sortMode == vColIndex) ? !sortAsc : true);
 		}
 	}
 	
@@ -111,36 +138,6 @@ public class FileList extends JTable implements SftpListener {
 		}
 		
 		public void mouseMoved(MouseEvent e) {}
-	}
-
-	// comparator for sorting file list
-	private static class ModelComparator implements Comparator<Object> {
-		private int mode = 0;
-		private boolean asc = true;
-		private static ModelComparator instances[][];
-		private ModelComparator(int m, boolean a) {
-			this.mode = m;
-			this.asc = a;
-		}
-		public static ModelComparator getInstance(int m, boolean a) {
-			if (instances == null) instances = new ModelComparator[4][2];
-			int j = a ? 0 : 1;
-			return (instances[m][j] == null) ? instances[m][j] = new ModelComparator(m, a) : instances[m][j];
-		}
-		public int compare(Object arg0, Object arg1) {
-			Vector<?> v0 = (Vector<?>)arg0;
-			Vector<?> v1 = (Vector<?>)arg1;
-			int sign = asc?1:-1;
-
-			if (mode == COLUMN_SIZE || mode == COLUMN_DATE) {
-				long s0 = (Long)v0.elementAt(mode);
-				long s1 = (Long)v1.elementAt(mode);
-				return sign * ((s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0));
-			} else if (mode == COLUMN_FILENAME || mode == COLUMN_EXT) {
-				return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
-			} 
-			return 0;
-		}
 	}
 	
 	public class FileListListener extends MouseAdapter {
@@ -156,26 +153,59 @@ public class FileList extends JTable implements SftpListener {
 		}
 	}
 
+	// comparator for sorting file list
+	private static class ModelComparator implements Comparator<Object> {
+		private int mode = 0;
+		private boolean asc = true;
+		private static ModelComparator instances[][];
+		
+		private ModelComparator(int m, boolean a) {
+			mode = m;
+			asc = a;
+		}
+		
+		public static ModelComparator getInstance(int m, boolean a) {
+			if (instances == null) instances = new ModelComparator[4][2];
+			int j = a ? 0 : 1;
+			return (instances[m][j] == null) ? instances[m][j] = new ModelComparator(m, a) : instances[m][j];
+		}
+		
+		public int compare(Object arg0, Object arg1) {
+			Vector<?> v0 = (Vector<?>)arg0;
+			Vector<?> v1 = (Vector<?>)arg1;
+			int sign = asc?1:-1;
+
+			if (mode == COLUMN_SIZE || mode == COLUMN_DATE) {
+				long s0 = (Long)v0.elementAt(mode);
+				long s1 = (Long)v1.elementAt(mode);
+				return sign * ((s0 > s1) ? 1 : ((s0 < s1) ? -1 : 0));
+			} else if (mode == COLUMN_FILENAME || mode == COLUMN_EXT) {
+				return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
+			} 
+			return 0;
+		}
+	}
+
 	/**
 	 * Initializes the table and its columns
 	 */
 	private FileList() {
 		super(FileList.model);
 
-		this.setCellSelectionEnabled(true);
-		this.setIntercellSpacing(new Dimension(3,3));
-		this.setShowGrid(false);
-		this.getColumnModel().getColumn(0).setPreferredWidth(400);
-		this.setDefaultRenderer(Object.class, MyTableCellRenderer.getInstance());
-		this.setRowHeight(20);
+		setCellSelectionEnabled(true);
+		setIntercellSpacing(new Dimension(3,3));
+		setShowGrid(false);
+		getColumnModel().getColumn(0).setPreferredWidth(400);
+		setDefaultRenderer(Object.class, MyTableCellRenderer.getInstance());
+		setRowHeight(20);
 
-		JTableHeader header = this.getTableHeader();
-		header.setDefaultRenderer(MyTableHeaderRenderer.getInstance().setOriginalTableCellRenderer(this.getTableHeader().getDefaultRenderer()));
+		JTableHeader header = getTableHeader();
+		header.setDefaultRenderer(MyTableHeaderRenderer.getInstance().setOriginalTableCellRenderer(getTableHeader().getDefaultRenderer()));
 		header.addMouseMotionListener(new ColumnHeaderMotionListener());
 		header.addMouseListener(new ColumnHeaderMouseListener());
-		this.addMouseListener(new FileListListener());
+		addMouseListener(new FileListListener());
 		
-		SftpAdapter.AddListener(this);
+		MsgBroadcaster.AddListener(this);
 	}
 
 	public static FileList GetInstance() {
@@ -185,20 +215,26 @@ public class FileList extends JTable implements SftpListener {
 	public void UpdateList(final String path) {
 		new Thread() {
 			public void run() {
-				SftpAdapter.GetFilesList(path);
+				SftpList.GetFilesList(path);
 			}
 		}.start();
 	}
 
 	public void UpdateListDone(Vector<?> list) {	
-		DefaultTableModel model = (DefaultTableModel)this.getModel();
+		DefaultTableModel model = (DefaultTableModel)getModel();
 		model.setRowCount(0);
 
-		for(Object obj : list) {
-			LsEntry entry = (LsEntry)obj;
-			String fn = entry.getFilename();
-			int in = fn.lastIndexOf('.');
-			String extension = (in != -1) ? fn.substring(in + 1) : "";
+		Iterator<?> listI = list.iterator();
+		while (listI.hasNext()) {
+			LsEntry entry = (LsEntry)listI.next();
+			String fileName = entry.getFilename();
+			
+			// Skip hidden files
+			if (fileName.charAt(0) == '.')
+				continue;
+			
+			int indexExt = fileName.lastIndexOf('.');
+			String extension = (indexExt != -1) ? fileName.substring(indexExt + 1) : "";
 			Object row[] = {
 					entry.getFilename(),
 					(entry.getAttrs().isDir()) ? -1 : new Long(entry.getAttrs().getSize()),
@@ -210,12 +246,14 @@ public class FileList extends JTable implements SftpListener {
 
 		Sort(sortMode, sortAsc);
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		this.setEnabled(true);
+		
+		setEnabled(true);
 	}
 
 	private void Sort(int mode, boolean asc) {
-		Vector<?> mv = model.getDataVector();
-		Collections.sort(mv, ModelComparator.getInstance(mode, asc));
+		Vector<?> modelData = model.getDataVector();
+		Collections.sort(modelData, ModelComparator.getInstance(mode, asc));
+		
 		sortMode = mode;
 		sortAsc = asc;
 	}
@@ -223,21 +261,26 @@ public class FileList extends JTable implements SftpListener {
 	private static String FileSize(long size) {
 		double fSize = size;
 		String units[] = {"B", "KB", "MB", "GB"};
-		for(int i=0; i<units.length; ++i) {
-			if(fSize < 1024.0) 
+		
+		for (int i=0; i<units.length; ++i) {
+			if (fSize < 1024.0) 
 				return String.format("%.1f %s", fSize, units[i]);
 			fSize /= 1024.0;
 		}
+		
 		return String.format("%.1f TB", fSize);
 	}
-	
-	public void UpdateStatus(final int type, final Object arg) {
+
+	@Override
+	public void ReceiveMsg(final int type, final Object arg) {
+		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if(type == SftpListener.FILELIST_DONE) {
-					Vector<?> list = (Vector<?>)arg;
-					FileList.GetInstance().UpdateListDone(list);
-				}
+				if (type == MsgListener.FILELIST_DONE)
+					GetInstance().UpdateListDone((Vector<?>)arg);
+				
+				if (type == MsgListener.FILELIST_FAIL)
+					GetInstance().UpdateListDone(new Vector<Object>());
 			}
 		});
 	}

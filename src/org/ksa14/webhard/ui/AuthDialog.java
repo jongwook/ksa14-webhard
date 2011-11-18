@@ -1,13 +1,28 @@
 package org.ksa14.webhard.ui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.net.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.net.URL;
 
-import org.ksa14.webhard.sftp.*;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
-public class AuthDialog extends JDialog implements SftpListener {
+import org.ksa14.webhard.MsgBroadcaster;
+import org.ksa14.webhard.MsgListener;
+import org.ksa14.webhard.sftp.SftpAdapter;
+
+public class AuthDialog extends JDialog implements MsgListener {
 	private static final long serialVersionUID = 0L;
 	public static final int wWidth = 460;
 	public static final int wHeight = 200;
@@ -15,22 +30,17 @@ public class AuthDialog extends JDialog implements SftpListener {
 	private JTextField textID;
 	private JPasswordField textPW;
 	private JButton btnConnect, btnExit;
-	private JLabel statusBar;
-	private static boolean authed = false;	
-
-	public static boolean Authenticate() {
-		new AuthDialog();
-		return authed;
-	}
+	private StatusBarLabel statusBar;
+	private static boolean authed = false;
 
 	public AuthDialog() {
 		// Try to set system native look-and-feel
 		SwingUtility.setSystemLookAndFeel();
 
-		this.setLayout(new BorderLayout());
+		setLayout(new BorderLayout());
+		
 		JPanel loginPanel = new JPanel();
 		loginPanel.setLayout(null);
-
 		loginPanel.setBackground(Color.white);
 
 		// Load KSA logo image
@@ -72,7 +82,7 @@ public class AuthDialog extends JDialog implements SftpListener {
 		loginPanel.add(textPW);
 
 		// Add buttons to connect or exit
-		this.btnConnect = new JButton("접속");
+		btnConnect = new JButton("접속");
 		btnConnect.setBounds(290, 115, 60, 25);
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -81,7 +91,7 @@ public class AuthDialog extends JDialog implements SftpListener {
 		});
 		loginPanel.add(btnConnect);
 
-		this.btnExit = new JButton("종료");
+		btnExit = new JButton("종료");
 		btnExit.setBounds(355, 115, 60, 25);
 		btnExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -91,73 +101,76 @@ public class AuthDialog extends JDialog implements SftpListener {
 		});
 		loginPanel.add(btnExit);
 
-		this.add(loginPanel, BorderLayout.CENTER);
+		add(loginPanel, BorderLayout.CENTER);
 
 		// Add the status bar
-		statusBar = new JLabel("KSA14 Webhard");
-		statusBar.setBorder(BorderFactory.createEtchedBorder());
-		this.add(statusBar, BorderLayout.PAGE_END);
+		statusBar = new StatusBarLabel("KSA14 Webhard");
+		add(statusBar, BorderLayout.SOUTH);
 
 		// Set window properties
-		this.setTitle("KSA14 Webhard Login");
-		this.setModalityType(ModalityType.APPLICATION_MODAL);
-		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setTitle("KSA14 Webhard Login");
+		setModalityType(ModalityType.APPLICATION_MODAL);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
 		// Set window size and location
 		int sW = (int)getToolkit().getScreenSize().getWidth();
 		int sH = (int)getToolkit().getScreenSize().getHeight();
-		this.setSize(wWidth, wHeight);
-		this.setLocation((sW - wWidth) / 2, (sH - wHeight) / 2);
-		this.setResizable(false);
+		setSize(wWidth, wHeight);
+		setLocation((sW - wWidth) / 2, (sH - wHeight) / 2);
+		setResizable(false);
+		
+		// Add message listener to listen broadcast message
+		MsgBroadcaster.AddListener(this);
+		MsgBroadcaster.AddListener(statusBar);
 
 		// Show window
-		this.setVisible(true);
+		setVisible(true);
 	}
-
-	public boolean RequestAuth(final String id, final String pw) {
+	
+	public void dispose() {
+		// Remove message listener from broadcaster
+		MsgBroadcaster.RemoveListener(this);
+		MsgBroadcaster.RemoveListener(statusBar);
+		super.dispose();
+	}
+	
+	public static boolean IsAuth() {
+		return authed;
+	}
+	
+	public void RequestAuth(final String id, final String pw) {
 		// Check if id and password is given
 		if ((id.trim().length() == 0) || (pw.trim().length() == 0)) {
 			JOptionPane.showMessageDialog(null, "학번과 비밀번호를 입력해주세요", "KSA14 Webhard Login", JOptionPane.WARNING_MESSAGE);
-			return false;
+			return;
 		}
 		
-		this.btnConnect.setEnabled(false);
+		btnConnect.setEnabled(false);
 
 		// Try to authenticate
-		SftpAdapter.AddListener(this);
-
 		new Thread() {
 			public void run() {
 				SftpAdapter.Connect(id, pw);
 			}
 		}.start();
-
-		// Success
-		return true;
 	}
 
-	public void UpdateStatus(final int type, final Object arg) {
-		SwingUtilities.invokeLater( new Runnable() {
+	@Override
+	public void ReceiveMsg(final int type, final Object arg) {
+		// TODO Auto-generated method stub
+		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if(type == SftpListener.INFO && statusBar != null)
-					statusBar.setText(arg.toString());
-
-				if(type == SftpListener.FAILED) {
-					authed = false;
-					dispose();
-					JOptionPane.showMessageDialog(null, "접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
-				}
-
-				if(type == SftpListener.SUCCEED) {
+				if (type == MsgListener.CONNECT_SUCCESS) {
 					authed = true;
 					dispose();
 				}
+				
+				if (type == MsgListener.CONNECT_FAIL) {
+					authed = false;
+					JOptionPane.showMessageDialog(null, "서버 접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
+					btnConnect.setEnabled(true);
+				}
 			}
 		});
-	}
-	
-	public void dispose() {
-		SftpAdapter.RemoveListener(this);
-		super.dispose();
 	}
 }

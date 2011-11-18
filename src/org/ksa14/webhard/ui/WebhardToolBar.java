@@ -17,21 +17,19 @@ public class WebhardToolBar extends JToolBar {
 		public WebhardToolBarButton(URL urlIcon, String label, String action) {
 			super();
 			
-			this.setMargin(margins);
-			this.setVerticalTextPosition(CENTER);
-			this.setHorizontalTextPosition(RIGHT);
+			setMargin(margins);
+			setVerticalTextPosition(CENTER);
+			setHorizontalTextPosition(RIGHT);
 			
-			this.setIcon(new ImageIcon(urlIcon));
-			this.setText(label);
-			this.setActionCommand(action);
-			this.addActionListener(this);
+			setIcon(new ImageIcon(urlIcon));
+			setText(label);
+			setActionCommand(action);
+			addActionListener(this);
 		}
 
 		public void actionPerformed(ActionEvent e) {
-			if (e.getActionCommand().equals("exit")) {
-				if (JOptionPane.showOptionDialog(null, "웹하드를 종료합니다", "KSA14 Webhard Client", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null) == 0)
-					System.exit(0);
-			}
+			if (e.getActionCommand().equals("exit"))
+				WebhardFrame.Exit();
 		}
 	}
 	
@@ -42,16 +40,16 @@ public class WebhardToolBar extends JToolBar {
 	}
 	
 	public WebhardToolBar() {
-		this.setLayout(new BorderLayout());
+		setLayout(new BorderLayout());
 		
-		this.add(newSeparator(0, 2, SwingConstants.HORIZONTAL), BorderLayout.NORTH);
-		this.add(newSeparator(0, 2, SwingConstants.HORIZONTAL), BorderLayout.SOUTH);
+		add(newSeparator(0, 2, SwingConstants.HORIZONTAL), BorderLayout.NORTH);
+		add(newSeparator(0, 2, SwingConstants.HORIZONTAL), BorderLayout.SOUTH);
 		
 		Box boxButton = Box.createHorizontalBox();
 		boxButton.add(newSeparator(2, 0, SwingConstants.VERTICAL));
 		boxButton.add(new WebhardToolBarButton(getClass().getResource("/res/exit.png"), "종료", "exit"));
 		boxButton.add(newSeparator(10, 24, SwingConstants.VERTICAL));
-		this.add(boxButton, BorderLayout.WEST);
+		add(boxButton, BorderLayout.WEST);
 		
 		Box boxSearch = Box.createHorizontalBox();
 		textSearch = new JTextField();
@@ -59,8 +57,8 @@ public class WebhardToolBar extends JToolBar {
 		boxSearch.add(textSearch);
 		boxSearch.add(new WebhardToolBarButton(getClass().getResource("/res/search.png"), "검색", "search"));
 		boxSearch.add(new Separator(new Dimension(2, 0)));
-		this.add(boxSearch, BorderLayout.EAST);
+		add(boxSearch, BorderLayout.EAST);
 		
-		this.setFloatable(false);
+		setFloatable(false);
 	}
 }

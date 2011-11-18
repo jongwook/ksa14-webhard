@@ -28,38 +28,43 @@ public class WebhardFrame extends JFrame{
 		
 		// Load Icon
 		URL urlIcon = getClass().getResource("/res/icon48.png");
-		Image image = Toolkit.getDefaultToolkit().getImage(urlIcon);
-		this.setIconImage(image);	
+		Image imgIcon = Toolkit.getDefaultToolkit().getImage(urlIcon);
+		setIconImage(imgIcon);
 		
 		// Make the process terminate when the window is closed 
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		// Set the default window size and location
 		int sW = (int)getToolkit().getScreenSize().getWidth();
 		int sH = (int)getToolkit().getScreenSize().getHeight();
 		int wW = Math.min(sW, wWidth);
 		int wH = Math.min(sH, wHeight);
-		this.setSize(wW, wH);
-		this.setLocation((sW - wW) / 2, (sH - wH) / 2);
+		setSize(wW, wH);
+		setLocation((sW - wW) / 2, (sH - wH) / 2);
 		
 		// Set the background color
-		this.getContentPane().setBackground(Color.lightGray);
+		getContentPane().setBackground(Color.lightGray);
 		
 		// Add the main panel
-		this.add(new WebhardPanel());
+		add(new WebhardPanel());
 		
 		// Show the wait cursor until the file list loads up
-		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		// setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		// Finally, show the window up
-		this.setVisible(true);
+		setVisible(true);
 	}
 	
 	public static WebhardFrame GetInstance() {
-		return (theInstance == null) ? theInstance=new WebhardFrame() : theInstance;
+		return (theInstance == null) ? theInstance = new WebhardFrame() : theInstance;
 	}
 	
 	public static void Open() {
 		GetInstance();
+	}
+	
+	public static void Exit() {
+		if (JOptionPane.showOptionDialog(null, "KSA14 Webhard 를 종료합니다", "KSA14 Webhard Client", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null) == 0)
+			System.exit(0);
 	}
 }

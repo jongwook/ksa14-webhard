@@ -1,66 +1,72 @@
 package org.ksa14.webhard.ui;
 
-import java.awt.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 
-import org.ksa14.webhard.sftp.*;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+
+import org.ksa14.webhard.MsgBroadcaster;
+import org.ksa14.webhard.MsgListener;
 
 /**
  * WebhardPanel maintains all components in the client area of the main webhard window
  * 
  * @author Jongwook
  */
-public class WebhardPanel extends JPanel implements SftpListener {
+public class WebhardPanel extends JPanel implements MsgListener {
 	public static final long serialVersionUID = 0L;
 
 	protected JToolBar toolBar;
-	protected DirectoryTree tree;
+	protected DirectoryTree dirTree;
 	protected FileList files;
-	protected JLabel statusBar;
+	protected StatusBarLabel statusBar;
 
 	/**
 	 * Initializes the GUI components of the main webhard window
 	 */
 	public WebhardPanel() {
-		this.setBackground(Color.lightGray);
+		setBackground(Color.lightGray);
+		
 		// Set layout
-		this.setLayout(new BorderLayout());
+		setLayout(new BorderLayout());
 
 		// Initialize the tool bar
-		this.toolBar = new WebhardToolBar();
-		this.add(this.toolBar, BorderLayout.PAGE_START);
+		toolBar = new WebhardToolBar();
+		add(this.toolBar, BorderLayout.PAGE_START);
 
 		// Initialize the directory tree
-		this.tree = DirectoryTree.GetInstance();
-		JScrollPane SPTree = new JScrollPane(this.tree);
+		dirTree = DirectoryTree.GetInstance();
+		JScrollPane SPTree = new JScrollPane(this.dirTree);
 		SPTree.setPreferredSize(new Dimension(200, 600));
 
 		// Initialize the file list 
-		this.files = FileList.GetInstance();
+		files = FileList.GetInstance();
 		JScrollPane SPList = new JScrollPane(this.files);
 		SPList.getViewport().setBackground(Color.white);
 		
-		this.add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, SPTree, SPList), BorderLayout.CENTER);
+		add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, SPTree, SPList), BorderLayout.CENTER);
 		
 		// Initialize the status bar
-		this.statusBar = new JLabel("준비 중");
-		this.statusBar.setBorder(BorderFactory.createEtchedBorder());
-		this.statusBar.setBackground(Color.lightGray);
-		this.add(this.statusBar, BorderLayout.PAGE_END);
+		statusBar = new StatusBarLabel("준비 중");
+		add(this.statusBar, BorderLayout.PAGE_END);
 		
-		SftpAdapter.AddListener(this);
+		MsgBroadcaster.AddListener(this);
+		MsgBroadcaster.AddListener(statusBar);
 	}
-	
-	public void UpdateStatus(final int type, final Object arg) {
+
+	@Override
+	public void ReceiveMsg(final int type, final Object arg) {
+		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if(type == SftpListener.INFO && statusBar != null) {
-					statusBar.setText(arg.toString());
-				}
-				
-				if(type == SftpListener.FAILED){
+				if ((type == MsgListener.DIRTREE_FAIL) || (type == MsgListener.FILELIST_FAIL))
 					JOptionPane.showMessageDialog(null, arg.toString(), "KSA14 Webhard", JOptionPane.ERROR_MESSAGE);
-				}
 			}
 		});
 	}

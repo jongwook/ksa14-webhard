@@ -1,12 +1,24 @@
 package org.ksa14.webhard.ui;
 
-import java.util.*;
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.tree.*;
-import javax.swing.event.*;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.util.Iterator;
+import java.util.Vector;
 
-import org.ksa14.webhard.sftp.*;
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
+
+import org.ksa14.webhard.MsgBroadcaster;
+import org.ksa14.webhard.MsgListener;
+import org.ksa14.webhard.sftp.SftpList;
 
 /**
  * DirectoryTree represents the directory tree component that goes left of the webahrd window. 
@@ -15,7 +27,7 @@ import org.ksa14.webhard.sftp.*;
  * 
  * @author Jongwook
  */
-public class DirectoryTree extends JTree implements TreeSelectionListener, TreeWillExpandListener, SftpListener {
+public class DirectoryTree extends JTree implements TreeSelectionListener, TreeWillExpandListener, MsgListener {
 	public static final long serialVersionUID = 0L;
 
 	private static DirectoryTree theInstance;
@@ -26,10 +38,9 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		public static final long serialVersionUID = 0L;
 
 		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-			if (leaf && tree.getPathForRow(row).getLastPathComponent() instanceof DefaultMutableTreeNode) { 
+			if (leaf && tree.getPathForRow(row).getLastPathComponent() instanceof DefaultMutableTreeNode)
 				setLeafIcon(getClosedIcon());
-			}    
-			return super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf,	row, hasFocus);
+			return super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 		}
 	}
 
@@ -38,91 +49,76 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	 */
 	private DirectoryTree(DefaultMutableTreeNode tnode) {
 		super (tnode);
+		
 		top = tnode;
-
-		Object paths[] = {"/", ""};
 		top.add(new DefaultMutableTreeNode("..."));
 		lastNode = top;
 		lastPath = new TreePath(top);
-		UpdateNode(paths, top);
 
-		this.setScrollsOnExpand(true);
-		this.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		this.addTreeSelectionListener(this);
-		this.addTreeWillExpandListener(this);
-		this.setRowHeight(20);
-		this.setCellRenderer(new MyTreeCellRenderer());
+		setScrollsOnExpand(true);
+		getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		addTreeSelectionListener(this);
+		addTreeWillExpandListener(this);
+		setRowHeight(20);
+		setCellRenderer(new MyTreeCellRenderer());
 		
-		SftpAdapter.AddListener(this);
+		MsgBroadcaster.AddListener(this);
+		
+		Object paths[] = {"/", ""};
+		UpdateTree(paths, top);
 	}
 
 	public static DirectoryTree GetInstance() {
-		if(theInstance == null) 
+		if (theInstance == null) 
 			theInstance = new DirectoryTree(new DefaultMutableTreeNode("KSA14 Webhard"));
 
 		return theInstance;	
 	}
 
-	public void UpdateTreeDone(Vector<?> dirlist) {
-		for (int i=0; i<dirlist.size(); i++) {
-			String dir = (String)dirlist.elementAt(i);
-
-			// skip hidden files
-			if(dir.charAt(0) == '.') continue;
-
-			DefaultMutableTreeNode child = new DefaultMutableTreeNode(dirlist.elementAt(i));
-
-			// create dummy child
-			child.add(new DefaultMutableTreeNode("..."));
-
-			lastNode.add(child);
-		}
-		collapsePath(lastPath);
-		expandPath(lastPath);
-		
-		this.setEnabled(true);
-	}
-
 	public void valueChanged(TreeSelectionEvent e) {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)getLastSelectedPathComponent();
-		if(node == lastNode) return;
+		if (node == lastNode)
+			return;
+		
 		lastPath = e.getPath();
 		lastNode = node;
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		UpdateNode(e.getPath().getPath(), node);
+		UpdateTree(e.getPath().getPath(), node);
 	}
 
 	public void treeWillExpand(TreeExpansionEvent e) {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
-		if(node == top || node == lastNode) return;
+		if (node == top || node == lastNode)
+			return;
+		
 		lastPath = e.getPath();
 		lastNode = node;
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		UpdateNode(e.getPath().getPath(), node);
-		this.setSelectionPath(e.getPath());
+		UpdateTree(e.getPath().getPath(), node);
+		setSelectionPath(e.getPath());
 	}
 
 	public void treeWillCollapse(TreeExpansionEvent e) {}
-
-	public void UpdateNode(final Object paths[], final DefaultMutableTreeNode node) {
-		if(node == null) return;
+	
+	public void UpdateTree(final Object paths[], final DefaultMutableTreeNode node) {
+		if (node == null)
+			return;
 		
-		this.setEnabled(false);
+		setEnabled(false);
 		FileList.GetInstance().setEnabled(false);
 		
 		new Thread() { 
 			public void run() {
 				StringBuffer path = new StringBuffer();
-				
-				for(int depth = 1; depth < paths.length; ++depth) {
+				for (int depth = 1; depth < paths.length; depth++)
 					path.append("/" + paths[depth]);
-				}
 
-				if(!node.isLeaf() && node.getChildAt(0).toString().equals("...")) {
+				if (!node.isLeaf() && node.getChildAt(0).toString().equals("...")) {
 					node.remove(0);
-					SftpAdapter.GetDirectoryList(path.toString());
+					SftpList.GetDirectoryList(path.toString());
 				} else {
-					UpdateStatus(SftpListener.DIRLIST_DONE, new Vector<Object>());
+					MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "디렉토리 탐색 완료");
+					UpdateTreeDone(new Vector<Object>());
 				}
 
 				if (path.length() == 0)
@@ -132,30 +128,56 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 			}
 		}.start();
 	}
+
+	public void UpdateTreeDone(Vector<?> dirlist) {
+		Iterator<?> dirIter = dirlist.iterator();
+		while (dirIter.hasNext()) {
+			Object curItem = dirIter.next();
+
+			// Skip hidden files
+			if (curItem.toString().charAt(0) == '.')
+				continue;
+
+			// Create dummy child
+			DefaultMutableTreeNode child = new DefaultMutableTreeNode(curItem);
+			child.add(new DefaultMutableTreeNode("..."));
+			lastNode.add(child);
+		}
+		
+		collapsePath(lastPath);
+		expandPath(lastPath);
+		
+		setEnabled(true);
+	}
 	
 	public void ChangeDirectory(String directory) {
 		DefaultMutableTreeNode childNode = null;
-		for(int i=0; i<lastNode.getChildCount(); ++i) {
+		for (int i=0; i<lastNode.getChildCount(); i++) {
 			if(lastNode.getChildAt(i).toString().equals(directory)) {
 				childNode = (DefaultMutableTreeNode)lastNode.getChildAt(i);
 				break;
 			}
 		}
-		if(childNode == null) return;
+		if (childNode == null)
+			return;
+		
 		lastNode = childNode;
 		lastPath = lastPath.pathByAddingChild(lastNode);
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		UpdateNode(lastPath.getPath(), lastNode);
+		UpdateTree(lastPath.getPath(), lastNode);
 		setSelectionPath(lastPath);
 	}
-	
-	public void UpdateStatus(final int type, final Object arg) {
+
+	@Override
+	public void ReceiveMsg(final int type, final Object arg) {
+		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if(type == SftpListener.DIRLIST_DONE) {
-					Vector<?> dirList = (Vector<?>)arg;
-					DirectoryTree.GetInstance().UpdateTreeDone(dirList);
-				}
+				if (type == MsgListener.DIRTREE_DONE)
+					GetInstance().UpdateTreeDone((Vector<?>)arg);
+				
+				if (type == MsgListener.DIRTREE_FAIL)
+					GetInstance().UpdateTreeDone(new Vector<Object>());
 			}
 		});
 	}
