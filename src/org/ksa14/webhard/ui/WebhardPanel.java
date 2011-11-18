@@ -1,6 +1,7 @@
 package org.ksa14.webhard.ui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 
@@ -22,10 +23,14 @@ import org.ksa14.webhard.MsgListener;
 public class WebhardPanel extends JPanel implements MsgListener {
 	public static final long serialVersionUID = 0L;
 
-	protected JToolBar toolBar;
-	protected DirectoryTree dirTree;
-	protected FileList files;
-	protected StatusBarLabel statusBar;
+	protected StatusBarLabel Status;
+	protected JToolBar ToolsBar;
+	protected JPanel FilePanel;
+	protected DirectoryTree ExploreDir;
+	protected ExploreFileList ExploreFile;
+	protected FileList SearchFile;
+	protected JSplitPane ExplorePane;
+	protected JScrollPane SearchPane;
 
 	/**
 	 * Initializes the GUI components of the main webhard window
@@ -37,40 +42,59 @@ public class WebhardPanel extends JPanel implements MsgListener {
 		setLayout(new BorderLayout());
 		
 		// Initialize the status bar
-		statusBar = new StatusBarLabel("준비 중");
-		add(this.statusBar, BorderLayout.SOUTH);
+		Status = new StatusBarLabel("준비 중");
+		add(Status, BorderLayout.SOUTH);
+
+		// Initialize the tool bar
+		ToolsBar = new WebhardToolBar();
+		add(ToolsBar, BorderLayout.NORTH);
+
+		// Initialize the directory tree and explore file list 
+		ExploreDir = DirectoryTree.GetInstance();
+		JScrollPane spedir = new JScrollPane(ExploreDir);
+		spedir.setPreferredSize(new Dimension(200, 600));
+		
+		ExploreFile = ExploreFileList.GetInstance();
+		JScrollPane spefile = new JScrollPane(ExploreFile);
+		spefile.getViewport().setBackground(Color.white);
+		
+		ExplorePane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, spedir, spefile);
+		
+		// Initialize the search file list
+		SearchFile = SearchFileList.GetInstance();
+		SearchPane = new JScrollPane(SearchFile);
+		SearchPane.getViewport().setBackground(Color.white);
+		
+		// Initialize file panel
+		FilePanel = new JPanel();
+		FilePanel.setLayout(new CardLayout());
+		
+		FilePanel.add(ExplorePane, "explore");
+		FilePanel.add(SearchPane, "search");
+
+		add(FilePanel, BorderLayout.CENTER);
 		
 		// Add message listener to broadcaster
 		MsgBroadcaster.AddListener(this);
-		MsgBroadcaster.AddListener(statusBar);
-
-		// Initialize the tool bar
-		toolBar = new WebhardToolBar();
-		add(this.toolBar, BorderLayout.NORTH);
-
-		// Initialize the directory tree
-		dirTree = DirectoryTree.GetInstance();
-		JScrollPane SPTree = new JScrollPane(this.dirTree);
-		SPTree.setPreferredSize(new Dimension(200, 600));
-
-		// Initialize the file list 
-		files = FileList.GetInstance();
-		JScrollPane SPList = new JScrollPane(this.files);
-		SPList.getViewport().setBackground(Color.white);
 		
-		add(new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, SPTree, SPList), BorderLayout.CENTER);
+		ExploreDir.UpdateTree();
 	}
 
-	@Override
 	public void ReceiveMsg(final int type, final Object arg) {
-		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if (type == MsgListener.CONNECT_FAIL) {
+				if (type == MsgListener.CONNECT_NONE) {
 					JOptionPane.showMessageDialog(null, arg.toString(), "KSA14 Webhard", JOptionPane.ERROR_MESSAGE);
-					dirTree.setEnabled(false);
-					files.setEnabled(false);
+					ExploreDir.setEnabled(false);
+					ExploreFile.setEnabled(false);
+					SearchFile.setEnabled(false);
 				}
+				
+				if (type == MsgListener.PANEL_EXPLORE)
+					((CardLayout)FilePanel.getLayout()).show(FilePanel, "explore");
+				
+				if ((type == MsgListener.PANEL_SEARCH) || (type == MsgListener.SEARCH_DONE))
+					((CardLayout)FilePanel.getLayout()).show(FilePanel, "search");
 			}
 		});
 	}

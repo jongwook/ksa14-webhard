@@ -15,10 +15,10 @@ public class SftpAdapter {
 	public static final String USERNAME = "apache";
 	public static final String HOST = "webhard.ksa14.org";
 
-	private static JSch jsch;
-	private static Session session;
-	private static HashMap<String, ChannelSftp> channels = new HashMap<String, ChannelSftp>();
-	private static boolean connected = false;
+	private static JSch SftpJsch;
+	private static Session SftpSession;
+	private static HashMap<String, ChannelSftp> SftpChannels = new HashMap<String, ChannelSftp>();
+	private static boolean Connected = false;
 	
 	public static void Connect(String id, String pw) {
 		try {
@@ -32,24 +32,24 @@ public class SftpAdapter {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "세션을 초기화합니다");
 
 			// Init Jsch
-			jsch = new JSch();
+			SftpJsch = new JSch();
 			String hpw = AuthUtil.md5(pw);
-			jsch.addIdentity("Key", SSHKeys[1].getBytes(), SSHKeys[0].getBytes(), hpw.getBytes());
+			SftpJsch.addIdentity("Key", SSHKeys[1].getBytes(), SSHKeys[0].getBytes(), hpw.getBytes());
 			
 			// Start SSH session
-			session = jsch.getSession(USERNAME, HOST, 22);
+			SftpSession = SftpJsch.getSession(USERNAME, HOST, 22);
 			
 			Properties conf = new Properties();
 			conf.put("StrictHostKeyChecking", "no");
-			session.setConfig(conf);
+			SftpSession.setConfig(conf);
+
+			SftpSession.connect();
 
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속중입니다");
-
-			session.connect();
 			
 			// Start SFTP channel
-			ChannelSftp channel = (ChannelSftp)session.openChannel("sftp");
-			channels.put("main", channel);
+			ChannelSftp channel = (ChannelSftp)SftpSession.openChannel("sftp");
+			SftpChannels.put("main", channel);
 			channel.connect();
 			channel.setFilenameEncoding("UTF-8");
 		} catch (Exception e) {
@@ -58,26 +58,27 @@ public class SftpAdapter {
 			return;
 		}
 
-		connected = true;
+		Connected = true;
 		MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "KSA14 Webhard 에 접속되었습니다");
 		MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_SUCCESS, null);
 		return;
 	}
 	
 	public static boolean IsConnected() {
-		return connected;
+		return Connected;
 	}
 	
 	public static void Disconnect() {
-		synchronized (channels) {
-			Iterator<String> iter = channels.keySet().iterator();
+		synchronized (SftpChannels) {
+			Iterator<String> iter = SftpChannels.keySet().iterator();
 			while (iter.hasNext())
-				channels.get(iter.next()).disconnect();
+				SftpChannels.get(iter.next()).disconnect();
 		}
-		session.disconnect();
+		SftpSession.disconnect();
+		Connected = false;
 	}
 	
 	public static ChannelSftp getChannel(String key) {
-		return channels.get(key);
+		return SftpChannels.get(key);
 	}
 }

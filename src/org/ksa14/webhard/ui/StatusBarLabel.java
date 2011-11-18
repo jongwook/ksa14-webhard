@@ -4,6 +4,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 
+import org.ksa14.webhard.MsgBroadcaster;
 import org.ksa14.webhard.MsgListener;
 
 public class StatusBarLabel extends JLabel implements MsgListener {
@@ -14,7 +15,11 @@ public class StatusBarLabel extends JLabel implements MsgListener {
 		// Try to set system native look-and-feel
 		SwingUtility.setSystemLookAndFeel();
 		
+		// Set border
 		setBorder(BorderFactory.createEtchedBorder());
+		
+		// Add message listener to broadcaster
+		MsgBroadcaster.AddListener(this);
 	}
 
 	@Override

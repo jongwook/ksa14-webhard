@@ -24,13 +24,14 @@ import org.ksa14.webhard.sftp.SftpAdapter;
 
 public class AuthDialog extends JDialog implements MsgListener {
 	private static final long serialVersionUID = 0L;
-	public static final int wWidth = 460;
-	public static final int wHeight = 200;
+	
+	public static final int WIDTH = 460;
+	public static final int HEIGHT = 200;
 
-	private JTextField textID;
-	private JPasswordField textPW;
-	private JButton btnConnect, btnExit;
-	private StatusBarLabel statusBar;
+	private JTextField TextID;
+	private JPasswordField TextPW;
+	private JButton BtnConnect, BtnExit;
+	private StatusBarLabel Status;
 	private static boolean authed = false;
 
 	public AuthDialog() {
@@ -39,6 +40,7 @@ public class AuthDialog extends JDialog implements MsgListener {
 
 		setLayout(new BorderLayout());
 		
+		// Main login panel
 		JPanel loginPanel = new JPanel();
 		loginPanel.setLayout(null);
 		loginPanel.setBackground(Color.white);
@@ -55,7 +57,7 @@ public class AuthDialog extends JDialog implements MsgListener {
 			loginPanel.add(labelLogo);
 		}
 
-		// Add components to input login information
+		// Components for input login information
 		JLabel labelID = new JLabel("학번");
 		labelID.setBounds(195, 30, 60, 15);
 		loginPanel.add(labelID);
@@ -64,48 +66,48 @@ public class AuthDialog extends JDialog implements MsgListener {
 		labelPW.setBounds(195, 70, 60, 15);
 		loginPanel.add(labelPW);
 
-		textID = new JTextField();
-		textID.setBounds(260, 27, 155, 21);
-		textID.setColumns(20);
-		loginPanel.add(textID);
+		TextID = new JTextField();
+		TextID.setBounds(260, 27, 155, 21);
+		TextID.setColumns(20);
+		loginPanel.add(TextID);
 
-		textPW = new JPasswordField();
-		textPW.setBounds(260, 67, 155, 21);
-		textPW.setColumns(20);
-		textPW.addKeyListener(new KeyAdapter() {
+		TextPW = new JPasswordField();
+		TextPW.setBounds(260, 67, 155, 21);
+		TextPW.setColumns(20);
+		TextPW.addKeyListener(new KeyAdapter() {
 			public void keyTyped(KeyEvent e) {
 				if (e.getKeyChar() == KeyEvent.VK_ENTER) {
-					RequestAuth(textID.getText(), new String(textPW.getPassword()));
+					RequestAuth(TextID.getText(), new String(TextPW.getPassword()));
 				}
 			}
 		});
-		loginPanel.add(textPW);
+		loginPanel.add(TextPW);
 
-		// Add buttons to connect or exit
-		btnConnect = new JButton("접속");
-		btnConnect.setBounds(290, 115, 60, 25);
-		btnConnect.addActionListener(new ActionListener() {
+		// Add buttons to connect and exit
+		BtnConnect = new JButton("접속");
+		BtnConnect.setBounds(290, 115, 60, 25);
+		BtnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				RequestAuth(textID.getText(), new String(textPW.getPassword()));
+				RequestAuth(TextID.getText(), new String(TextPW.getPassword()));
 			}
 		});
-		loginPanel.add(btnConnect);
+		loginPanel.add(BtnConnect);
 
-		btnExit = new JButton("종료");
-		btnExit.setBounds(355, 115, 60, 25);
-		btnExit.addActionListener(new ActionListener() {
+		BtnExit = new JButton("종료");
+		BtnExit.setBounds(355, 115, 60, 25);
+		BtnExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				authed = false;
 				dispose();
 			}
 		});
-		loginPanel.add(btnExit);
+		loginPanel.add(BtnExit);
 
 		add(loginPanel, BorderLayout.CENTER);
 
 		// Add the status bar
-		statusBar = new StatusBarLabel("KSA14 Webhard");
-		add(statusBar, BorderLayout.SOUTH);
+		Status = new StatusBarLabel("KSA14 Webhard");
+		add(Status, BorderLayout.SOUTH);
 
 		// Set window properties
 		setTitle("KSA14 Webhard Login");
@@ -113,15 +115,15 @@ public class AuthDialog extends JDialog implements MsgListener {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
 		// Set window size and location
-		int sW = (int)getToolkit().getScreenSize().getWidth();
-		int sH = (int)getToolkit().getScreenSize().getHeight();
-		setSize(wWidth, wHeight);
-		setLocation((sW - wWidth) / 2, (sH - wHeight) / 2);
+		int sw = (int)getToolkit().getScreenSize().getWidth();
+		int sh = (int)getToolkit().getScreenSize().getHeight();
+		setSize(WIDTH, HEIGHT);
+		setLocation((sw - WIDTH) / 2, (sh - HEIGHT) / 2);
 		setResizable(false);
 		
-		// Add message listener to listen broadcast message
+		// Add message listener to broadcaster
 		MsgBroadcaster.AddListener(this);
-		MsgBroadcaster.AddListener(statusBar);
+		MsgBroadcaster.AddListener(Status);
 
 		// Show window
 		setVisible(true);
@@ -130,11 +132,8 @@ public class AuthDialog extends JDialog implements MsgListener {
 	public void dispose() {
 		// Remove message listener from broadcaster
 		MsgBroadcaster.RemoveListener(this);
-		MsgBroadcaster.RemoveListener(statusBar);
-		
-		if (!authed)
-			SftpAdapter.Disconnect();
-		
+		MsgBroadcaster.RemoveListener(Status);
+				
 		super.dispose();
 	}
 	
@@ -149,7 +148,7 @@ public class AuthDialog extends JDialog implements MsgListener {
 			return;
 		}
 		
-		btnConnect.setEnabled(false);
+		BtnConnect.setEnabled(false);
 
 		// Try to authenticate
 		new Thread() {
@@ -159,9 +158,7 @@ public class AuthDialog extends JDialog implements MsgListener {
 		}.start();
 	}
 
-	@Override
 	public void ReceiveMsg(final int type, final Object arg) {
-		// TODO Auto-generated method stub
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				if (type == MsgListener.CONNECT_SUCCESS) {
@@ -172,7 +169,7 @@ public class AuthDialog extends JDialog implements MsgListener {
 				if (type == MsgListener.CONNECT_FAIL) {
 					authed = false;
 					JOptionPane.showMessageDialog(null, "서버 접속에 실패하였습니다", "KSA14 Webhard Login", JOptionPane.ERROR_MESSAGE);
-					btnConnect.setEnabled(true);
+					BtnConnect.setEnabled(true);
 				}
 			}
 		});

@@ -14,17 +14,11 @@ public class Main {
 	 * 
 	 * @param args the command line arguments. will not be used.
 	 */
-	public static void main(String ... args) {
+	public static void main(String[] args) {
 		new AuthDialog();
 		if (!AuthDialog.IsAuth())
 			System.exit(0);
 		
 		WebhardFrame.Open();
-		
-		/*
-		// Check authentication and open the main window if the authentication was successful.
-		if (AuthDialog.Authenticate())
-			WebhardFrame.Open();
-		*/
 	}
 }
