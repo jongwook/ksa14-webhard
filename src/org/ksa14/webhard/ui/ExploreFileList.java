@@ -51,7 +51,7 @@ public class ExploreFileList extends FileList implements MsgListener {
 				JTable table = (JTable)e.getSource();
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
-				if (model.getValueAt(row, COLUMN_EXT).equals("."))	// If this is a folder
+				if (model.getValueAt(row, COLUMN_EXT).equals("."))	// If this is a directory
 					DirectoryTree.GetInstance().ChangeDirectory((String)model.getValueAt(row, COLUMN_FILENAME));
 			}
 		}

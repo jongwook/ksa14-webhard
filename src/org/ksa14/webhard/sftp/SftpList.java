@@ -73,6 +73,41 @@ public class SftpList {
 		MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "디렉토리 탐색 완료");
 		MsgBroadcaster.BroadcastMsg(MsgListener.DIRTREE_DONE, DirList);
 	}
+
+	public static Vector<String> GetDirectoryListNoMsg(String path) {
+		
+		// Check connection
+		if (!SftpAdapter.IsConnected())
+			return new Vector<String>();
+		ChannelSftp channel = SftpAdapter.getChannel("main");
+		if (!channel.isConnected())
+			return new Vector<String>();
+		
+		// Get directory list from sftp
+		Vector<String> DirList = new Vector<String>();
+		synchronized(channel) {
+			try {
+				Vector<?> ListV = channel.ls(path);
+				Iterator<?> ListI = ListV.iterator();
+				while (ListI.hasNext()) {
+					Object CurObj = ListI.next();
+					if (CurObj instanceof LsEntry) {
+						// Add only directories
+						String DirName = ((LsEntry)CurObj).getFilename();
+						if ((DirName.charAt(0) != '.') && (DirName.compareTo("recycle_bin") != 0) && ((LsEntry)CurObj).getAttrs().isDir())
+							DirList.add(DirName);
+					}
+				}
+			} catch (SftpException e) {
+				return new Vector<String>();
+			}
+		}
+		
+		// Sort directory name
+		Collections.sort(DirList, String.CASE_INSENSITIVE_ORDER);
+		
+		return DirList;
+	}
 	
 	public static void GetExploreFilesList(String path) {
 		// Check connection

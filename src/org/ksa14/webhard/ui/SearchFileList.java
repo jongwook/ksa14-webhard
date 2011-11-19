@@ -50,11 +50,10 @@ public class SearchFileList extends FileList implements MsgListener {
 				JTable table = (JTable)e.getSource();
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
-				if (model.getValueAt(row, COLUMN_EXT).equals(".")) {	// If this is a folder
-					DirectoryTree.GetInstance().UpdateTree((String)model.getValueAt(row, 4) + "/" + (String)model.getValueAt(row, COLUMN_FILENAME));
+				if (model.getValueAt(row, COLUMN_EXT).equals(".")) {	// If this is a directory
+					DirectoryTree.GetInstance().ChangePath((String)model.getValueAt(row, 4) + "/" + (String)model.getValueAt(row, COLUMN_FILENAME));
 					MsgBroadcaster.BroadcastMsg(PANEL_EXPLORE, null);
-				} else {
-					
+				} else {	// If this is a file
 				}
 			}
 		}

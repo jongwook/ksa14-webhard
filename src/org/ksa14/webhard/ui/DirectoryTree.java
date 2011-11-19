@@ -142,15 +142,6 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 			}
 		}.start();
 	}
-	
-	public void UpdateTree(String path) {
-		Object[] rootpath = {TopNode};
-		this.setSelectionPath(new DirectoryTreePath(rootpath));
-		
-		String[] dirpath = path.split("/");
-		for (int i=1; i<dirpath.length; i++) {
-		}
-	}
 
 	public void UpdateTreeDone(Vector<?> dirlist) {
 		Iterator<?> diri = dirlist.iterator();
@@ -168,18 +159,52 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	}
 	
 	public void ChangeDirectory(String directory) {
-		DefaultMutableTreeNode childNode = null;
+		DefaultMutableTreeNode child = null;
 		for (int i=0; i<LastNode.getChildCount(); i++) {
-			if(LastNode.getChildAt(i).toString().equals(directory)) {
-				childNode = (DefaultMutableTreeNode)LastNode.getChildAt(i);
+			if (LastNode.getChildAt(i).toString().equals(directory)) {
+				child = (DefaultMutableTreeNode)LastNode.getChildAt(i);
 				break;
 			}
 		}
-		if (childNode == null)
+		if (child == null)
 			return;
 		
-		LastNode = childNode;
+		LastNode = child;
 		LastPath = new DirectoryTreePath(LastPath.pathByAddingChild(LastNode));
+		
+		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		UpdateTree();
+		
+		setSelectionPath(LastPath);
+	}
+	
+	public void ChangePath(String path) {
+		Object[] rootpaths = {TopNode};
+		LastNode = TopNode;
+		LastPath = new DirectoryTreePath(rootpaths);
+		
+		String[] dirpath = path.split("/");
+		for (int i=1; i<dirpath.length; i++) {
+			if (!LastNode.isLeaf()) {
+				if (LastNode.getChildAt(0).toString().equals("...")) {
+					LastNode.remove(0);
+					UpdateTreeDone(SftpList.GetDirectoryListNoMsg(LastPath.toString()));
+				}
+				
+				DefaultMutableTreeNode child = null;
+				for (int j=0; j<LastNode.getChildCount(); j++) {
+					if (LastNode.getChildAt(j).toString().equals(dirpath[i])) {
+						child = (DefaultMutableTreeNode)LastNode.getChildAt(j);
+						break;
+					}
+				}
+				if (child == null)
+					break;
+				
+				LastNode = child;
+				LastPath = new DirectoryTreePath(LastPath.pathByAddingChild(LastNode));
+			}
+		}
 		
 		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		UpdateTree();
