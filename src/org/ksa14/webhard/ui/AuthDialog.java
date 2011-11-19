@@ -27,6 +27,8 @@ public class AuthDialog extends JDialog implements MsgListener {
 	
 	public static final int WIDTH = 460;
 	public static final int HEIGHT = 200;
+	
+	public static AuthDialog TheInstance;
 
 	private JTextField TextID;
 	private JPasswordField TextPW;
@@ -120,13 +122,22 @@ public class AuthDialog extends JDialog implements MsgListener {
 		setSize(WIDTH, HEIGHT);
 		setLocation((sw - WIDTH) / 2, (sh - HEIGHT) / 2);
 		setResizable(false);
+	}
+	
+	public static AuthDialog GetInstance() {
+		return (TheInstance == null) ? TheInstance = new AuthDialog() : TheInstance;
+	}
+	
+	public static void open() {
+		authed = false;
+		AuthDialog dialog = GetInstance();
 		
 		// Add message listener to broadcaster
-		MsgBroadcaster.AddListener(this);
-		MsgBroadcaster.AddListener(Status);
+		MsgBroadcaster.AddListener(dialog);
+		MsgBroadcaster.AddListener(dialog.Status);
 
 		// Show window
-		setVisible(true);
+		dialog.setVisible(true);
 	}
 	
 	public void dispose() {

@@ -15,7 +15,7 @@ public class Main {
 	 * @param args the command line arguments. will not be used.
 	 */
 	public static void main(String[] args) {
-		new AuthDialog();
+		AuthDialog.open();
 		if (!AuthDialog.IsAuth())
 			System.exit(0);
 		
