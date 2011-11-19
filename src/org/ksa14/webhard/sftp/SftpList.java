@@ -1,26 +1,32 @@
 package org.ksa14.webhard.sftp;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Vector;
 
 import org.ksa14.webhard.MsgBroadcaster;
 import org.ksa14.webhard.MsgListener;
 
+import com.google.gson.Gson;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.SftpException;
 
 public class SftpList {
-	public static class PathLsEntry {
-		public String path;
-		public LsEntry entry;
+	public static class SearchEntry {
+		public String path = "";
+		public String filename = "";
+		public boolean isdir = false;
+		public long filesize = 0;
+		public int mtime = 0;
 		
-		public PathLsEntry(String p, LsEntry e) {
-			path = p;
-			entry = e;
-		}
+		public SearchEntry() {}
 	}
 	
 	public static void GetDirectoryList(String path) {
@@ -57,7 +63,7 @@ public class SftpList {
 			} catch (SftpException e) {
 				MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "디렉토리 탐색에 실패했습니다");
 				MsgBroadcaster.BroadcastMsg(MsgListener.DIRTREE_FAIL, "디렉토리 탐색에 실패했습니다");
-				DirList.clear();
+				return;
 			}
 		}
 		
@@ -101,7 +107,7 @@ public class SftpList {
 			} catch (SftpException e) {
 				MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일 탐색에 실패했습니다");
 				MsgBroadcaster.BroadcastMsg(MsgListener.FILELIST_FAIL, "파일 탐색에 실패했습니다");
-				FileList.clear();
+				return;
 			}
 		}
 
@@ -128,37 +134,34 @@ public class SftpList {
 			return;	
 		}
 		
-		// Start search file from sftp
+		// Get search result from server 
 		MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일을 검색중입니다");
 
-		Vector<PathLsEntry> FileList = new Vector<PathLsEntry>();
-		synchronized(channel) {
-			try {
-				LinkedList<String> pathqueue = new LinkedList<String>();
-				pathqueue.offer("/");
-				do {
-					String path = pathqueue.poll();
-					Vector<?> ListV = channel.ls(path);
-					Iterator<?> ListI = ListV.iterator();
-					while (ListI.hasNext()) {
-						Object CurObj = ListI.next();
-						if (CurObj instanceof LsEntry) {
-							LsEntry CurEntry = (LsEntry)CurObj;
-							String FileName = CurEntry.getFilename();
-							if ((FileName.charAt(0) != '.') && (FileName.compareTo("recycle_bin") != 0)) {
-								if (CurEntry.getAttrs().isDir())
-									pathqueue.offer(path + FileName + "/");
-								if (FileName.toLowerCase().indexOf(sword.toLowerCase()) > -1)
-									FileList.add(new PathLsEntry(path, CurEntry));
-							}
-						}
-					}
-				} while (!pathqueue.isEmpty());
-			} catch (SftpException e) {
-				MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일 검색에 실패했습니다");
-				MsgBroadcaster.BroadcastMsg(MsgListener.SEARCH_FAIL, "파일 검색에 실패했습니다");
-				FileList.clear();
+		Vector<SearchEntry> FileList = new Vector<SearchEntry>();
+
+		try {
+			URL url = new URL("http://webhard.ksa14.org/search.php");
+			URLConnection con = url.openConnection();
+			con.setDoOutput(true);
+			
+			String param = URLEncoder.encode("search", "UTF-8") + "=" + URLEncoder.encode(sword, "UTF-8");
+			
+			OutputStreamWriter osw = new OutputStreamWriter(con.getOutputStream());
+			osw.write(param);
+			osw.flush();
+			
+			BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
+			
+			Gson gson = new Gson();
+			SearchEntry[] results = gson.fromJson(reader, SearchEntry[].class);
+			if (results != null) {
+				for (SearchEntry res : results)
+					FileList.add(res);
 			}
+		} catch (Exception e) {
+			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일 검색에 실패했습니다");
+			MsgBroadcaster.BroadcastMsg(MsgListener.SEARCH_FAIL, "파일 검색에 실패했습니다");
+			return;
 		}
 
 		MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일 검색 완료");

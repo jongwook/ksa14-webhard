@@ -90,11 +90,14 @@ public class WebhardPanel extends JPanel implements MsgListener {
 					SearchFile.setEnabled(false);
 				}
 				
-				if (type == MsgListener.PANEL_EXPLORE)
+				if ((type == MsgListener.PANEL_EXPLORE))
 					((CardLayout)FilePanel.getLayout()).show(FilePanel, "explore");
 				
-				if ((type == MsgListener.PANEL_SEARCH) || (type == MsgListener.SEARCH_DONE))
+				if ((type == MsgListener.PANEL_SEARCH))
 					((CardLayout)FilePanel.getLayout()).show(FilePanel, "search");
+				
+				if ((type == MsgListener.DIRTREE_FAIL) || (type == MsgListener.FILELIST_FAIL) || (type == MsgListener.SEARCH_FAIL))
+					JOptionPane.showMessageDialog(null, arg.toString(), "KSA14 Webhard", JOptionPane.ERROR_MESSAGE);
 			}
 		});
 	}

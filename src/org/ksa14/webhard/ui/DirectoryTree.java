@@ -144,6 +144,12 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 	}
 	
 	public void UpdateTree(String path) {
+		Object[] rootpath = {TopNode};
+		this.setSelectionPath(new DirectoryTreePath(rootpath));
+		
+		String[] dirpath = path.split("/");
+		for (int i=1; i<dirpath.length; i++) {
+		}
 	}
 
 	public void UpdateTreeDone(Vector<?> dirlist) {

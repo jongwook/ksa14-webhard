@@ -14,7 +14,7 @@ import javax.swing.table.TableModel;
 import org.ksa14.webhard.MsgBroadcaster;
 import org.ksa14.webhard.MsgListener;
 import org.ksa14.webhard.sftp.SftpList;
-import org.ksa14.webhard.sftp.SftpList.PathLsEntry;
+import org.ksa14.webhard.sftp.SftpList.SearchEntry;
 
 public class SearchFileList extends FileList implements MsgListener {
 	private static final long serialVersionUID = 0L;
@@ -51,8 +51,10 @@ public class SearchFileList extends FileList implements MsgListener {
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
 				if (model.getValueAt(row, COLUMN_EXT).equals(".")) {	// If this is a folder
-					DirectoryTree.GetInstance().UpdateTree((String)model.getValueAt(row, 4));
+					DirectoryTree.GetInstance().UpdateTree((String)model.getValueAt(row, 4) + "/" + (String)model.getValueAt(row, COLUMN_FILENAME));
 					MsgBroadcaster.BroadcastMsg(PANEL_EXPLORE, null);
+				} else {
+					
 				}
 			}
 		}
@@ -81,25 +83,25 @@ public class SearchFileList extends FileList implements MsgListener {
 				SftpList.GetSearchFilesList(sword);
 			}
 		}.start();
+		MsgBroadcaster.BroadcastMsg(MsgListener.PANEL_SEARCH, null);
 	}
 
 	public void UpdateListDone(Vector<?> list, int mode, boolean asc) {
 		DefaultTableModel model = (DefaultTableModel)getModel();
 		model.setRowCount(0);
 		
-		Iterator<?> listI = list.iterator();
-		while (listI.hasNext()) {
-			PathLsEntry pe = (PathLsEntry)listI.next();
-			String filename = pe.entry.getFilename();
+		Iterator<?> listi = list.iterator();
+		while (listi.hasNext()) {
+			SearchEntry se = (SearchEntry)listi.next();
 			
-			int indexExt = filename.lastIndexOf('.');
-			String extension = (indexExt != -1) ? filename.substring(indexExt + 1) : "";
+			int iext = se.filename.lastIndexOf('.');
+			String ext = (iext != -1) ? se.filename.substring(iext + 1) : "";
 			Object[] row = {
-					filename,
-					(pe.entry.getAttrs().isDir()) ? -1 : new Long(pe.entry.getAttrs().getSize()),
-					(pe.entry.getAttrs().isDir()) ? "." : extension,
-					new Long(pe.entry.getAttrs().getMTime() * 1000L),
-					pe.path
+					se.filename,
+					(se.isdir) ? -1 : new Long(se.filesize),
+					(se.isdir) ? "." : ext,
+					new Long(se.mtime * 1000L),
+					se.path
 			};
 			model.addRow(row);
 		}

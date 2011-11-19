@@ -24,7 +24,7 @@ public class AuthUtil {
 		try {
 			URL url = new URL("http://webhard.ksa14.org/key.php?id=" + id);
 			URLConnection con = url.openConnection();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
 			
 			String pubkey = reader.readLine() + "\n", line;			
 			StringBuffer pvtkey = new StringBuffer();

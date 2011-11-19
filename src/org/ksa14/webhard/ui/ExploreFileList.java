@@ -84,9 +84,9 @@ public class ExploreFileList extends FileList implements MsgListener {
 		DefaultTableModel model = (DefaultTableModel)getModel();
 		model.setRowCount(0);
 		
-		Iterator<?> listI = list.iterator();
-		while (listI.hasNext()) {
-			LsEntry entry = (LsEntry)listI.next();
+		Iterator<?> listi = list.iterator();
+		while (listi.hasNext()) {
+			LsEntry entry = (LsEntry)listi.next();
 			String filename = entry.getFilename();
 			
 			int indexExt = filename.lastIndexOf('.');
