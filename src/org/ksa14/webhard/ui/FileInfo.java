@@ -25,8 +25,6 @@ public class FileInfo {
 				if(view == null)
 					view = FileSystemView.getFileSystemView();
 				icons.put(extension, view.getSystemIcon(file));
-				
-				return icons.get(extension);
 			} catch(IOException e) {
 				System.err.println("Error searching the system icon for " + extension);
 			}

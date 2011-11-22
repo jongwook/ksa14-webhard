@@ -19,6 +19,8 @@ import org.ksa14.webhard.sftp.SftpList.SearchEntry;
 public class SearchFileList extends FileList implements MsgListener {
 	private static final long serialVersionUID = 0L;
 
+	public static final int COLUMN_PATH	= 4;
+	
 	private static SearchFileList TheInstance;
 	public static int SortMode = FileList.COLUMN_FILENAME;
 	public static boolean SortAsc = true;
@@ -51,7 +53,7 @@ public class SearchFileList extends FileList implements MsgListener {
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
 				if (model.getValueAt(row, COLUMN_EXT).equals(".")) {	// If this is a directory
-					DirectoryTree.GetInstance().ChangePath((String)model.getValueAt(row, 4) + "/" + (String)model.getValueAt(row, COLUMN_FILENAME));
+					DirectoryTree.GetInstance().ChangePath((String)model.getValueAt(row, COLUMN_PATH) + "/" + (String)model.getValueAt(row, COLUMN_FILENAME));
 					MsgBroadcaster.BroadcastMsg(PANEL_EXPLORE, null);
 				} else {	// If this is a file
 				}
@@ -65,9 +67,13 @@ public class SearchFileList extends FileList implements MsgListener {
 		getTableHeader().addMouseListener(new HeaderMouseListener());		
 		addMouseListener(new ListMouseListener());
 		
-		model.addColumn("path");
-		getColumnModel().removeColumn(getColumnModel().getColumn(4));
-		getColumnModel().getColumn(0).setPreferredWidth(500);
+		((DefaultTableModel)getModel()).addColumn("path");
+		getColumnModel().removeColumn(getColumnModel().getColumn(COLUMN_PATH));
+		
+		getColumnModel().getColumn(COLUMN_FILENAME).setPreferredWidth(400);
+		getColumnModel().getColumn(COLUMN_DATE).setMinWidth(75);
+		getColumnModel().getColumn(COLUMN_DATE).setMaxWidth(75);
+		getColumnModel().getColumn(COLUMN_DATE).setPreferredWidth(75);
 		
 		MsgBroadcaster.AddListener(this);
 	}
@@ -95,14 +101,13 @@ public class SearchFileList extends FileList implements MsgListener {
 			
 			int iext = se.filename.lastIndexOf('.');
 			String ext = (iext != -1) ? se.filename.substring(iext + 1) : "";
-			Object[] row = {
+			model.addRow(new Object[] {
 					se.filename,
 					(se.isdir) ? -1 : new Long(se.filesize),
 					(se.isdir) ? "." : ext,
 					new Long(se.mtime * 1000L),
 					se.path
-			};
-			model.addRow(row);
+			});
 		}
 
 		Sort(mode, asc);

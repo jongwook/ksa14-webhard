@@ -36,8 +36,8 @@ public class SftpList {
 			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_NONE, "서버에 접속되어 있지 않습니다");
 			return;
 		}
-		ChannelSftp channel = SftpAdapter.getChannel("main");
-		if (!channel.isConnected()) {
+		ChannelSftp channel = SftpAdapter.GetNewChannel();
+		if ((channel == null) || !channel.isConnected()) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되어 있지 않습니다");
 			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_NONE, "서버에 접속되어 있지 않습니다");
 			return;	
@@ -67,6 +67,8 @@ public class SftpList {
 			}
 		}
 		
+		channel.disconnect();
+		
 		// Sort directory name
 		Collections.sort(DirList, String.CASE_INSENSITIVE_ORDER);
 		
@@ -79,8 +81,8 @@ public class SftpList {
 		// Check connection
 		if (!SftpAdapter.IsConnected())
 			return new Vector<String>();
-		ChannelSftp channel = SftpAdapter.getChannel("main");
-		if (!channel.isConnected())
+		ChannelSftp channel = SftpAdapter.GetNewChannel();
+		if ((channel == null) || !channel.isConnected())
 			return new Vector<String>();
 		
 		// Get directory list from sftp
@@ -103,6 +105,8 @@ public class SftpList {
 			}
 		}
 		
+		channel.disconnect();
+		
 		// Sort directory name
 		Collections.sort(DirList, String.CASE_INSENSITIVE_ORDER);
 		
@@ -116,8 +120,8 @@ public class SftpList {
 			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_NONE, "서버에 접속되어 있지 않습니다");
 			return;
 		}
-		ChannelSftp channel = SftpAdapter.getChannel("main");
-		if (!channel.isConnected()) {
+		ChannelSftp channel = SftpAdapter.GetNewChannel();
+		if ((channel == null) || !channel.isConnected()) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되어 있지 않습니다");
 			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_NONE, "서버에 접속되어 있지 않습니다");
 			return;	
@@ -145,6 +149,8 @@ public class SftpList {
 				return;
 			}
 		}
+		
+		channel.disconnect();
 
 		MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일 탐색 완료");
 		MsgBroadcaster.BroadcastMsg(MsgListener.FILELIST_DONE, FileList);
@@ -162,8 +168,8 @@ public class SftpList {
 			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_NONE, "서버에 접속되어 있지 않습니다");
 			return;
 		}
-		ChannelSftp channel = SftpAdapter.getChannel("main");
-		if (!channel.isConnected()) {
+		ChannelSftp channel = SftpAdapter.GetNewChannel();
+		if ((channel == null) || !channel.isConnected()) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되어 있지 않습니다");
 			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_NONE, "서버에 접속되어 있지 않습니다");
 			return;	
@@ -198,6 +204,8 @@ public class SftpList {
 			MsgBroadcaster.BroadcastMsg(MsgListener.SEARCH_FAIL, "파일 검색에 실패했습니다");
 			return;
 		}
+		
+		channel.disconnect();
 
 		MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "파일 검색 완료");
 		MsgBroadcaster.BroadcastMsg(MsgListener.SEARCH_DONE, FileList);

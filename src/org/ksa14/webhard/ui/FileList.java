@@ -31,21 +31,13 @@ public class FileList extends JTable {
 	
 	private static final DateFormat DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-	public static final String[] COLUMNS = {"이름", "크기", "종류", "날짜"};
-	public static final Object[][] ROWS = {};
+	protected final String[] COLUMNS = {"파일 이름", "크기", "종류", "날짜"};
+	protected final Object[][] ROWS = {};
 
-	public static final int COLUMN_FILENAME		= 0;
-	public static final int COLUMN_SIZE			= 1;
-	public static final int COLUMN_EXT			= 2;
-	public static final int COLUMN_DATE			= 3;
-
-	protected DefaultTableModel model = new DefaultTableModel(FileList.ROWS, FileList.COLUMNS) {
-		public static final long serialVersionUID = 0L;
-		
-		public boolean isCellEditable(int row, int column) {
-			return false;
-		}
-	};
+	protected static final int COLUMN_FILENAME		= 0;
+	protected static final int COLUMN_SIZE			= 1;
+	protected static final int COLUMN_EXT			= 2;
+	protected static final int COLUMN_DATE			= 3;
 	
 	protected class HeaderRenderer extends DefaultTableCellRenderer {
 		public static final long serialVersionUID = 0L;
@@ -69,8 +61,8 @@ public class FileList extends JTable {
 			JLabel label = (JLabel)PrevRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			
 			if (column == mode) {
-				URL urlIcon = getClass().getResource("/res/sort_" + (asc ? "asc" : "desc") + ".png");
-				label.setIcon(new ImageIcon(urlIcon));
+				URL uicon = getClass().getResource("/res/sort_" + (asc ? "asc" : "desc") + ".png");
+				label.setIcon(new ImageIcon(uicon));
 				label.setHorizontalTextPosition(SwingConstants.LEFT);
 			}
 			
@@ -101,16 +93,30 @@ public class FileList extends JTable {
 			String text = value.toString();
 			String ext = (String)table.getModel().getValueAt(row, FileList.COLUMN_EXT);
 			
-			if (column == 0){	// File name
+			switch (column) {
+			case COLUMN_FILENAME:		// File name
+				label.setIcon(FileInfo.GetIcon(ext));	// File icon
 				label.setText(text);
-				label.setIcon(FileInfo.GetIcon(ext));
-			} else {
+				label.setHorizontalAlignment(JLabel.LEFT);
+				break;
+			case COLUMN_SIZE:		// File size
 				label.setIcon(null);
-				if (column == 1) label.setText(((Long)value < 0) ? "" : FileSize((Long)value));	// File size
-				if (column == 2) label.setText(FileInfo.GetDescription(text));					// File description
-				if (column == 3) label.setText(DATEFORMAT.format(new Date((Long)value)));		// File modified date
-			} 
-			label.setHorizontalAlignment((column == 1) ? JLabel.RIGHT : JLabel.LEFT);
+				label.setText(((Long)value < 0) ? "" : FileSize((Long)value));
+				label.setHorizontalAlignment(JLabel.RIGHT);
+				break;
+			case COLUMN_EXT:		// File description
+				label.setIcon(null);
+				label.setText(FileInfo.GetDescription(text));
+				label.setHorizontalAlignment(JLabel.LEFT);
+				break;
+			case COLUMN_DATE:		// File modified date
+				label.setIcon(null);
+				label.setText(DATEFORMAT.format(new Date((Long)value)));
+				label.setHorizontalAlignment(JLabel.CENTER);
+				break;
+			default:
+			}
+			
 			return label;
 		}
 	}
@@ -161,9 +167,17 @@ public class FileList extends JTable {
 	protected FileList() {
 		super();
 		
-		setModel(model);
-		setCellSelectionEnabled(true);
-		setIntercellSpacing(new Dimension(3,3));
+		setModel(new DefaultTableModel(ROWS, COLUMNS) {
+			public static final long serialVersionUID = 0L;
+			
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		});
+		
+		setColumnSelectionAllowed(false);
+		setRowSelectionAllowed(true);
+		setIntercellSpacing(new Dimension(0, 0));
 		setShowGrid(false);
 		setRowHeight(20);
 
@@ -173,21 +187,17 @@ public class FileList extends JTable {
 		
 		setDefaultRenderer(Object.class, ListRenderer.GetInstance());
 	}
-
-	public void UpdateList(final String path) {}
-
-	public void UpdateListDone(Vector<?> list, int mode, boolean asc) {}
-
+	
 	protected void Sort(int mode, boolean asc) {
-		Vector<?> modelData = model.getDataVector();
-		Collections.sort(modelData, ListComparator.GetInstance(mode, asc));
+		Vector<?> mdata = ((DefaultTableModel)getModel()).getDataVector();
+		Collections.sort(mdata, ListComparator.GetInstance(mode, asc));
 	}
 
 	protected static String FileSize(long size) {
 		float fsize = size;
 		String[] units = {"B", "KB", "MB", "GB"};
 		
-		for (int i=0; i<units.length; ++i) {
+		for (int i=0; i<units.length; i++) {
 			if (fsize < 1024.0) 
 				return String.format("%.1f %s", fsize, units[i]);
 			fsize /= 1024.0;

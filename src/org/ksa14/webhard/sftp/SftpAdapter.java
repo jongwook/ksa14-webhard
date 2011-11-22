@@ -1,7 +1,5 @@
 package org.ksa14.webhard.sftp;
 
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Properties;
 
 import org.ksa14.webhard.MsgBroadcaster;
@@ -9,6 +7,7 @@ import org.ksa14.webhard.MsgListener;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 public class SftpAdapter {
@@ -17,7 +16,6 @@ public class SftpAdapter {
 
 	private static JSch SftpJsch;
 	private static Session SftpSession;
-	private static HashMap<String, ChannelSftp> SftpChannels = new HashMap<String, ChannelSftp>();
 	private static boolean Connected = false;
 	
 	public static void Connect(String id, String pw) {
@@ -29,7 +27,7 @@ public class SftpAdapter {
 			if (SSHKeys == null)
 				throw new Exception();
 
-			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "세션을 초기화합니다");
+			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속중입니다");
 
 			// Init Jsch
 			SftpJsch = new JSch();
@@ -44,14 +42,6 @@ public class SftpAdapter {
 			SftpSession.setConfig(conf);
 
 			SftpSession.connect();
-
-			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속중입니다");
-			
-			// Start SFTP channel
-			ChannelSftp channel = (ChannelSftp)SftpSession.openChannel("sftp");
-			SftpChannels.put("main", channel);
-			channel.connect();
-			channel.setFilenameEncoding("UTF-8");
 		} catch (Exception e) {
 			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버 접속에 실패하였습니다");
 			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_FAIL, null);
@@ -68,17 +58,14 @@ public class SftpAdapter {
 		return Connected;
 	}
 	
-	public static void Disconnect() {
-		synchronized (SftpChannels) {
-			Iterator<String> iter = SftpChannels.keySet().iterator();
-			while (iter.hasNext())
-				SftpChannels.get(iter.next()).disconnect();
+	public static ChannelSftp GetNewChannel() {
+		ChannelSftp channel;
+		try {
+			channel = (ChannelSftp)SftpSession.openChannel("sftp");
+			channel.connect();
+		} catch (JSchException e) {
+			return null;
 		}
-		SftpSession.disconnect();
-		Connected = false;
-	}
-	
-	public static ChannelSftp getChannel(String key) {
-		return SftpChannels.get(key);
+		return channel;
 	}
 }

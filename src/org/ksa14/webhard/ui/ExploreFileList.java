@@ -19,7 +19,7 @@ import com.jcraft.jsch.ChannelSftp.LsEntry;
 
 public class ExploreFileList extends FileList implements MsgListener {
 	private static final long serialVersionUID = 0L;
-
+	
 	private static ExploreFileList TheInstance;
 	public static int SortMode = FileList.COLUMN_FILENAME;
 	public static boolean SortAsc = true;
@@ -63,7 +63,10 @@ public class ExploreFileList extends FileList implements MsgListener {
 		getTableHeader().addMouseListener(new HeaderMouseListener());
 		addMouseListener(new ListMouseListener());
 		
-		getColumnModel().getColumn(0).setPreferredWidth(400);
+		getColumnModel().getColumn(COLUMN_FILENAME).setPreferredWidth(400);
+		getColumnModel().getColumn(COLUMN_DATE).setMinWidth(75);
+		getColumnModel().getColumn(COLUMN_DATE).setMaxWidth(75);
+		getColumnModel().getColumn(COLUMN_DATE).setPreferredWidth(75);
 		
 		MsgBroadcaster.AddListener(this);
 	}
@@ -91,13 +94,12 @@ public class ExploreFileList extends FileList implements MsgListener {
 			
 			int indexExt = filename.lastIndexOf('.');
 			String extension = (indexExt != -1) ? filename.substring(indexExt + 1) : "";
-			Object[] row = {
+			model.addRow(new Object[] {
 					filename,
 					(entry.getAttrs().isDir()) ? -1 : new Long(entry.getAttrs().getSize()),
 					(entry.getAttrs().isDir()) ? "." : extension,
 					new Long(entry.getAttrs().getMTime() * 1000L),
-			};
-			model.addRow(row);
+			});
 		}
 
 		Sort(mode, asc);

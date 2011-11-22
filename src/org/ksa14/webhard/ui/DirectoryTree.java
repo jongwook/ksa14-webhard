@@ -30,7 +30,7 @@ import org.ksa14.webhard.sftp.SftpList;
 public class DirectoryTree extends JTree implements TreeSelectionListener, TreeWillExpandListener, MsgListener {
 	public static final long serialVersionUID = 0L;
 	
-	private class DirectoryTreePath extends TreePath {
+	public class DirectoryTreePath extends TreePath {
 		private static final long serialVersionUID = 0L;
 		
 		public DirectoryTreePath(DefaultMutableTreeNode node) {
@@ -168,6 +168,9 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		}
 		if (child == null)
 			return;
+
+		collapsePath(LastPath);
+		expandPath(LastPath);
 		
 		LastNode = child;
 		LastPath = new DirectoryTreePath(LastPath.pathByAddingChild(LastNode));
@@ -210,6 +213,10 @@ public class DirectoryTree extends JTree implements TreeSelectionListener, TreeW
 		UpdateTree();
 		
 		setSelectionPath(LastPath);
+	}
+	
+	public String GetLastPathString() {
+		return LastPath.toString();
 	}
 
 	@Override
