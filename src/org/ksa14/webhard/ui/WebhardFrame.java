@@ -11,16 +11,18 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 /**
- * WebhardFrame is a JFrame subclass that represents the main window 
+ * Represents the main webhard window 
  * 
- * @author Jongwook
+ * @author Jongwook, ThomasJun
  */
-public class WebhardFrame extends JFrame{
-	public static final long serialVersionUID=0L;
-	
-	public static final int WIDTH = 800;
-	public static final int HEIGHT = 600;
+public class WebhardFrame extends JFrame {
+	public static final long serialVersionUID = 0L;
+
 	public static WebhardFrame TheInstance;
+	
+	private int Width = 1024;
+	private int Height = 600;
+
 	/**
 	 * Initialize the main webhard window. 
 	 * GUI components are initialized by WebhardPanel class.
@@ -37,45 +39,45 @@ public class WebhardFrame extends JFrame{
 		Image imgIcon = Toolkit.getDefaultToolkit().getImage(urlIcon);
 		setIconImage(imgIcon);
 		
-		// Make the process terminate when the window is closed 
-		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		
 		// Set the default window size and location
 		int sW = (int)getToolkit().getScreenSize().getWidth();
 		int sH = (int)getToolkit().getScreenSize().getHeight();
-		int wW = Math.min(sW, WIDTH);
-		int wH = Math.min(sH, HEIGHT);
+		int wW = Math.min(sW, Width);
+		int wH = Math.min(sH, Height);
 		setSize(wW, wH);
 		setLocation((sW - wW) / 2, (sH - wH) / 2);
-		
+
 		// Set the background color
 		getContentPane().setBackground(Color.lightGray);
-		
-		// Add the main panel
-		add(new WebhardPanel());
 
+		// Add the webhard main panel
+		add(new WebhardPanel());
+		
+		// Add listener for closing the window 
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				Exit();
+				exit();
 			}
 		});
-		
-		// Finally, show the window up
-		setVisible(true);
 	}
 	
-	public static WebhardFrame GetInstance() {
+	public static WebhardFrame getInstance() {
 		return (TheInstance == null) ? TheInstance = new WebhardFrame() : TheInstance;
 	}
 	
-	public static void Open() {
-		GetInstance();
+	public static void open() {
+		getInstance().setVisible(true);
+		authenticate();
 	}
 	
-	public static void Exit() {
-		if (JOptionPane.showOptionDialog(null, "KSA14 Webhard 를 종료합니다", "KSA14 Webhard Client", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null) == 0) {
-			System.exit(0);
-		}
+	public static void authenticate() {
+		WebhardAuth.open();
+		if (WebhardAuth.authed) {}			
 	}
 
+	public static void exit() {
+		if (JOptionPane.showOptionDialog(null, "KSA14 Webhard 를 종료합니다", "KSA14 Webhard Client", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null) == 0)
+			System.exit(0);
+	}
 }

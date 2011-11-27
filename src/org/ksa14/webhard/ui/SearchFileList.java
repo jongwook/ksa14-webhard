@@ -16,31 +16,32 @@ import org.ksa14.webhard.MsgListener;
 import org.ksa14.webhard.sftp.SftpList;
 import org.ksa14.webhard.sftp.SftpList.SearchEntry;
 
-public class SearchFileList extends FileList implements MsgListener {
+public class SearchFileList extends FileList  implements MsgListener {
 	private static final long serialVersionUID = 0L;
 
 	public static final int COLUMN_PATH	= 4;
 	
-	private static SearchFileList TheInstance;
-	public static int SortMode = FileList.COLUMN_FILENAME;
-	public static boolean SortAsc = true;
+	private static SearchFileList theInstance;
+	
+	public static int sortMode = FileList.COLUMN_FILENAME;
+	public static boolean sortAsc = true;
 	
 	private class HeaderMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
-			JTable table = SearchFileList.GetInstance();
+			JTable table = getInstance();
 			int icol = table.getColumnModel().getColumnIndexAtX(e.getX());
 
 			if (icol != -1)  {
-				if (SearchFileList.SortMode == icol)
-					SearchFileList.SortAsc = !SearchFileList.SortAsc;
+				if (SearchFileList.sortMode == icol)
+					SearchFileList.sortAsc = !SearchFileList.sortAsc;
 				else
-					SearchFileList.SortAsc = true;
-				SearchFileList.SortMode = icol;
-
-				((HeaderRenderer)SearchFileList.GetInstance().getTableHeader().getDefaultRenderer()).SetSort(SearchFileList.SortMode, SearchFileList.SortAsc);
-				Sort(SearchFileList.SortMode, SearchFileList.SortAsc);
+					SearchFileList.sortAsc = true;
+				SearchFileList.sortMode = icol;
+				
+				((HeaderRenderer)getInstance().getTableHeader().getDefaultRenderer()).setSort(SearchFileList.sortMode, SearchFileList.sortAsc);
+				sort(SearchFileList.sortMode, SearchFileList.sortAsc);
 			}
-			
+
 			table.getSelectionModel().clearSelection();
 		}
 	}
@@ -52,78 +53,87 @@ public class SearchFileList extends FileList implements MsgListener {
 				JTable table = (JTable)e.getSource();
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
-				if (model.getValueAt(row, COLUMN_EXT).equals(".")) {	// If this is a directory
-					DirectoryTree.GetInstance().ChangePath((String)model.getValueAt(row, COLUMN_PATH) + "/" + (String)model.getValueAt(row, COLUMN_FILENAME));
-					MsgBroadcaster.BroadcastMsg(PANEL_EXPLORE, null);
-				} else {	// If this is a file
-				}
+				String dirpath = (String)model.getValueAt(row, COLUMN_PATH);
+				if (model.getValueAt(row, COLUMN_EXT).equals("."))	// If this is a directory
+					dirpath += "/" + (String)model.getValueAt(row, COLUMN_FILENAME);
+				ExploreDirectoryTree.getInstance().changePath(dirpath);
+				MsgBroadcaster.broadcastMsg(PANEL_EXPLORE, null);
 			}
 		}
 	}
-	
+
 	private SearchFileList() {
 		super();
 		
-		getTableHeader().addMouseListener(new HeaderMouseListener());		
+		getTableHeader().addMouseListener(new HeaderMouseListener());
 		addMouseListener(new ListMouseListener());
-		
+
 		((DefaultTableModel)getModel()).addColumn("path");
 		getColumnModel().removeColumn(getColumnModel().getColumn(COLUMN_PATH));
 		
-		getColumnModel().getColumn(COLUMN_FILENAME).setPreferredWidth(400);
+		getColumnModel().getColumn(COLUMN_FILENAME).setPreferredWidth(450);
 		getColumnModel().getColumn(COLUMN_DATE).setMinWidth(75);
 		getColumnModel().getColumn(COLUMN_DATE).setMaxWidth(75);
 		getColumnModel().getColumn(COLUMN_DATE).setPreferredWidth(75);
 		
-		MsgBroadcaster.AddListener(this);
+		MsgBroadcaster.addListener(this);
 	}
 
-	public static SearchFileList GetInstance() {
-		return (TheInstance == null) ? TheInstance = new SearchFileList() : TheInstance;
+	public static SearchFileList getInstance() {
+		return (theInstance == null) ? (theInstance = new SearchFileList()) : theInstance;
 	}
 
-	public void UpdateList(final String sword) {
+	public void updateList(final String sword) {
+		if (sword.trim().length() == 0) {
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "검색어를 입력해주세요");
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "검색어를 입력해주세요");
+			return;
+		}
+		
+		setEnabled(false);
+		WebhardFrame.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		
 		new Thread() {
 			public void run() {
-				SftpList.GetSearchFilesList(sword);
+				((DefaultTableModel)getModel()).setRowCount(0);
+				SftpList.getSearchFilesList(sword);
 			}
 		}.start();
-		MsgBroadcaster.BroadcastMsg(MsgListener.PANEL_SEARCH, null);
 	}
-
-	public void UpdateListDone(Vector<?> list, int mode, boolean asc) {
+	
+	public void updateListDone(Vector<?> filelist) {
 		DefaultTableModel model = (DefaultTableModel)getModel();
 		model.setRowCount(0);
 		
-		Iterator<?> listi = list.iterator();
-		while (listi.hasNext()) {
-			SearchEntry se = (SearchEntry)listi.next();
+		Iterator<?> fileiter = filelist.iterator();
+		while (fileiter.hasNext()) {
+			SearchEntry fileentry = (SearchEntry)fileiter.next();
 			
-			int iext = se.filename.lastIndexOf('.');
-			String ext = (iext != -1) ? se.filename.substring(iext + 1) : "";
+			int iExt = fileentry.filename.lastIndexOf('.');
+			String fileext = (iExt != -1) ? fileentry.filename.substring(iExt + 1) : "";
 			model.addRow(new Object[] {
-					se.filename,
-					(se.isdir) ? -1 : new Long(se.filesize),
-					(se.isdir) ? "." : ext,
-					new Long(se.mtime * 1000L),
-					se.path
+					fileentry.filename,
+					(fileentry.isdir) ? -1 : fileentry.filesize,
+					(fileentry.isdir) ? "." : fileext,
+					fileentry.mtime * 1000L,
+					fileentry.path
 			});
 		}
-
-		Sort(mode, asc);
-		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		
+		this.sort(sortMode, sortAsc);
 		
 		setEnabled(true);
+		WebhardFrame.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
-	
-	public void ReceiveMsg(final int type, final Object arg) {
+
+	public void receiveMsg(final int type, final Object arg) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				if (type == MsgListener.SEARCH_DONE)
-					GetInstance().UpdateListDone((Vector<?>)arg, SearchFileList.SortMode, SearchFileList.SortAsc);
+					getInstance().updateListDone((Vector<?>)arg);
 				
 				if (type == MsgListener.SEARCH_FAIL)
-					GetInstance().UpdateListDone(new Vector<Object>(), SearchFileList.SortMode, SearchFileList.SortAsc);
+					getInstance().updateListDone(new Vector<Object>());
 			}
 		});
 	}

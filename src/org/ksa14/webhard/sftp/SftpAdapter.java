@@ -14,58 +14,78 @@ public class SftpAdapter {
 	public static final String USERNAME = "apache";
 	public static final String HOST = "webhard.ksa14.org";
 
-	private static JSch SftpJsch;
-	private static Session SftpSession;
-	private static boolean Connected = false;
+	private static JSch jschSftp = new JSch();
+	private static Session sessionMainSftp = null;
+	private static ChannelSftp channelMainSftp = null;
+	private static final Properties config = new Properties();
 	
-	public static void Connect(String id, String pw) {
+	public static void connect(String id, String pw) {
+		if (isConnected())
+			disconnect();
+		
 		try {
-			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "로그인 정보를 확인하는 중입니다");
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "로그인 정보를 확인하는 중입니다");
 
 			// Get SSH public, private keys from server
-			String[] SSHKeys = AuthUtil.GetKeys(id);
+			String[] SSHKeys = SftpUtility.getKeys(id);
 			if (SSHKeys == null)
 				throw new Exception();
 
-			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버에 접속중입니다");
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "서버에 접속중입니다");
 
 			// Init Jsch
-			SftpJsch = new JSch();
-			String hpw = AuthUtil.md5(pw);
-			SftpJsch.addIdentity("Key", SSHKeys[1].getBytes(), SSHKeys[0].getBytes(), hpw.getBytes());
+			String hpw = SftpUtility.md5(pw);
+			jschSftp.addIdentity("Key", SSHKeys[1].getBytes(), SSHKeys[0].getBytes(), hpw.getBytes());
 			
 			// Start SSH session
-			SftpSession = SftpJsch.getSession(USERNAME, HOST, 22);
+			sessionMainSftp = jschSftp.getSession(USERNAME, HOST, 22);
 			
-			Properties conf = new Properties();
-			conf.put("StrictHostKeyChecking", "no");
-			SftpSession.setConfig(conf);
+			config.put("StrictHostKeyChecking", "no");
+			sessionMainSftp.setConfig(config);
 
-			SftpSession.connect();
+			sessionMainSftp.connect();
+			
+			// Connect to Sftp channel
+			channelMainSftp = (ChannelSftp)sessionMainSftp.openChannel("sftp");
+			channelMainSftp.connect();
 		} catch (Exception e) {
-			MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "서버 접속에 실패하였습니다");
-			MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_FAIL, null);
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "서버 접속에 실패하였습니다");
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "서버 접속에 실패하였습니다");
+			MsgBroadcaster.broadcastMsg(MsgListener.CONNECT_FAIL, null);
 			return;
 		}
-
-		Connected = true;
-		MsgBroadcaster.BroadcastMsg(MsgListener.STATUS_INFO, "KSA14 Webhard 에 접속되었습니다");
-		MsgBroadcaster.BroadcastMsg(MsgListener.CONNECT_SUCCESS, null);
+		
+		MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "서버에 접속되었습니다");
+		MsgBroadcaster.broadcastMsg(MsgListener.CONNECT_SUCCESS, null);
 		return;
 	}
 	
-	public static boolean IsConnected() {
-		return Connected;
+	public static boolean isConnected() {
+		return ((channelMainSftp != null) && channelMainSftp.isConnected());
 	}
 	
-	public static ChannelSftp GetNewChannel() {
-		ChannelSftp channel;
-		try {
-			channel = (ChannelSftp)SftpSession.openChannel("sftp");
-			channel.connect();
-		} catch (JSchException e) {
-			return null;
+	public static void disconnect() {
+		if (isConnected()) {
+			sessionMainSftp.disconnect();
+			channelMainSftp.disconnect();
+			sessionMainSftp = null;
+			channelMainSftp = null;
 		}
+	}
+	
+	public static ChannelSftp getMainChannel() {
+		return channelMainSftp;
+	}
+	
+	public static ChannelSftp getNewChannel() throws JSchException {
+		// Set new Sftp channel connection
+		Session session = jschSftp.getSession(USERNAME, HOST, 22);
+		session.setConfig(config);
+		session.connect();
+		
+		ChannelSftp channel = (ChannelSftp)session.openChannel("sftp");
+		channel.connect();
+		
 		return channel;
 	}
 }

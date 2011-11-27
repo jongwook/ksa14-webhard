@@ -16,28 +16,30 @@ import org.ksa14.webhard.MsgListener;
 import org.ksa14.webhard.sftp.SftpList;
 
 import com.jcraft.jsch.ChannelSftp.LsEntry;
+import com.jcraft.jsch.SftpATTRS;
 
 public class ExploreFileList extends FileList implements MsgListener {
 	private static final long serialVersionUID = 0L;
 	
-	private static ExploreFileList TheInstance;
-	public static int SortMode = FileList.COLUMN_FILENAME;
-	public static boolean SortAsc = true;
+	private static ExploreFileList theInstance;
+	
+	public static int sortMode = FileList.COLUMN_FILENAME;
+	public static boolean sortAsc = true;
 	
 	private class HeaderMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
-			JTable table = ExploreFileList.GetInstance();
+			JTable table = getInstance();
 			int icol = table.getColumnModel().getColumnIndexAtX(e.getX());
 
 			if (icol != -1)  {
-				if (ExploreFileList.SortMode == icol)
-					ExploreFileList.SortAsc = !ExploreFileList.SortAsc;
+				if (ExploreFileList.sortMode == icol)
+					ExploreFileList.sortAsc = !ExploreFileList.sortAsc;
 				else
-					ExploreFileList.SortAsc = true;
-				ExploreFileList.SortMode = icol;
+					ExploreFileList.sortAsc = true;
+				ExploreFileList.sortMode = icol;
 				
-				((HeaderRenderer)ExploreFileList.GetInstance().getTableHeader().getDefaultRenderer()).SetSort(ExploreFileList.SortMode, ExploreFileList.SortAsc);
-				Sort(ExploreFileList.SortMode, ExploreFileList.SortAsc);
+				((HeaderRenderer)getInstance().getTableHeader().getDefaultRenderer()).setSort(ExploreFileList.sortMode, ExploreFileList.sortAsc);
+				sort(ExploreFileList.sortMode, ExploreFileList.sortAsc);
 			}
 
 			table.getSelectionModel().clearSelection();
@@ -51,71 +53,79 @@ public class ExploreFileList extends FileList implements MsgListener {
 				JTable table = (JTable)e.getSource();
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
-				if (model.getValueAt(row, COLUMN_EXT).equals("."))	// If this is a directory
-					DirectoryTree.GetInstance().ChangeDirectory((String)model.getValueAt(row, COLUMN_FILENAME));
+				if (model.getValueAt(row, COLUMN_EXT).equals(".")) {	// If this is a directory
+					ExploreDirectoryTree.getInstance().changePathChild((String)model.getValueAt(row, COLUMN_FILENAME));
+				} else {
+					
+				}
 			}
 		}
 	}
-	
+
 	private ExploreFileList() {
 		super();
 		
 		getTableHeader().addMouseListener(new HeaderMouseListener());
 		addMouseListener(new ListMouseListener());
 		
-		getColumnModel().getColumn(COLUMN_FILENAME).setPreferredWidth(400);
+		getColumnModel().getColumn(COLUMN_FILENAME).setPreferredWidth(450);
 		getColumnModel().getColumn(COLUMN_DATE).setMinWidth(75);
 		getColumnModel().getColumn(COLUMN_DATE).setMaxWidth(75);
 		getColumnModel().getColumn(COLUMN_DATE).setPreferredWidth(75);
 		
-		MsgBroadcaster.AddListener(this);
+		MsgBroadcaster.addListener(this);
+	}
+	
+	public static ExploreFileList getInstance() {
+		return (theInstance == null) ? (theInstance = new ExploreFileList()) : theInstance;
 	}
 
-	public static ExploreFileList GetInstance() {
-		return (TheInstance == null) ? TheInstance = new ExploreFileList() : TheInstance;
-	}
-
-	public void UpdateList(final String path) {
+	public void updateList(final String path) {
+		setEnabled(false);
+		WebhardFrame.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		
 		new Thread() {
 			public void run() {
-				SftpList.GetExploreFilesList(path);
+				((DefaultTableModel)getModel()).setRowCount(0);
+				SftpList.getExploreFilesList(path);
 			}
 		}.start();
 	}
 
-	public void UpdateListDone(Vector<?> list, int mode, boolean asc) {
+	public void updateListDone(Vector<?> filelist) {
 		DefaultTableModel model = (DefaultTableModel)getModel();
 		model.setRowCount(0);
 		
-		Iterator<?> listi = list.iterator();
-		while (listi.hasNext()) {
-			LsEntry entry = (LsEntry)listi.next();
-			String filename = entry.getFilename();
+		Iterator<?> fileiter = filelist.iterator();
+		while (fileiter.hasNext()) {
+			LsEntry fileentry = (LsEntry)fileiter.next();
+			String filename = fileentry.getFilename();
+			SftpATTRS fileattr = fileentry.getAttrs();
 			
-			int indexExt = filename.lastIndexOf('.');
-			String extension = (indexExt != -1) ? filename.substring(indexExt + 1) : "";
+			int iExt = filename.lastIndexOf('.');
+			String fileext = (iExt != -1) ? filename.substring(iExt + 1) : "";
 			model.addRow(new Object[] {
 					filename,
-					(entry.getAttrs().isDir()) ? -1 : new Long(entry.getAttrs().getSize()),
-					(entry.getAttrs().isDir()) ? "." : extension,
-					new Long(entry.getAttrs().getMTime() * 1000L),
+					(fileattr.isDir()) ? -1 : fileattr.getSize(),
+					(fileattr.isDir()) ? "." : fileext,
+					fileentry.getAttrs().getMTime() * 1000L
 			});
 		}
-
-		Sort(mode, asc);
-		WebhardFrame.GetInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		
+		this.sort(sortMode, sortAsc);
 		
 		setEnabled(true);
+		WebhardFrame.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
-	
-	public void ReceiveMsg(final int type, final Object arg) {
+
+	public void receiveMsg(final int type, final Object arg) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				if (type == MsgListener.FILELIST_DONE)
-					GetInstance().UpdateListDone((Vector<?>)arg, ExploreFileList.SortMode, ExploreFileList.SortAsc);
+					getInstance().updateListDone((Vector<?>)arg);
 				
 				if (type == MsgListener.FILELIST_FAIL)
-					GetInstance().UpdateListDone(new Vector<Object>(), ExploreFileList.SortMode, ExploreFileList.SortAsc);
+					getInstance().updateListDone(new Vector<Object>());
 			}
 		});
 	}

@@ -2,31 +2,36 @@ package org.ksa14.webhard;
 
 import java.util.HashSet;
 
+/**
+ * Broadcast messages to other classes
+ * 
+ * @author Jongwook, ThomasJun
+ */
 public class MsgBroadcaster {
-	private static HashSet<MsgListener> Listeners = new HashSet<MsgListener>();
+	private static HashSet<MsgListener> listeners = new HashSet<MsgListener>();
 
-	public static void AddListener(MsgListener listener) {
-		synchronized (Listeners) {
-			Listeners.add(listener);
+	public static void addListener(MsgListener listener) {
+		synchronized (listeners) {
+			listeners.add(listener);
 		}
 	}
 	
-	public static void RemoveListener(MsgListener listener) {
-		synchronized (Listeners) {
-			Listeners.remove(listener);
+	public static void removeListener(MsgListener listener) {
+		synchronized (listeners) {
+			listeners.remove(listener);
 		}
 	}
 	
-	public static void ClearListeners() {
-		synchronized (Listeners) {
-			Listeners.clear();
+	public static void clearlisteners() {
+		synchronized (listeners) {
+			listeners.clear();
 		}
 	}
 	
-	public static void BroadcastMsg(int type, Object arg) {
-		synchronized (Listeners) {
-			for (MsgListener lsnr : Listeners)
-				lsnr.ReceiveMsg(type, arg);
+	public static void broadcastMsg(int type, Object arg) {
+		synchronized (listeners) {
+			for (MsgListener listener : listeners)
+				listener.receiveMsg(type, arg);
 		}
 	}
 }

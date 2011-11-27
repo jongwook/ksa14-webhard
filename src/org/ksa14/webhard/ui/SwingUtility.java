@@ -1,6 +1,6 @@
 package org.ksa14.webhard.ui;
 
-import javax.swing.*;
+import javax.swing.UIManager;
 
 /**
  * Contains utility features related to GUI.
@@ -8,10 +8,7 @@ import javax.swing.*;
  * @author Jongwook
  */
 public class SwingUtility {
-	
-	/**
-	 * Try to set system native look-and-feel
-	 */
+	//Try to set system native look-and-feel
 	public static void setSystemLookAndFeel() {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -19,5 +16,4 @@ public class SwingUtility {
 			System.err.println("Unable to set native LAF : " + e.getMessage());
 		}
 	}
-	
 }

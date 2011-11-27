@@ -21,44 +21,39 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 
-/**
- * FileList represents the GUI component that shows lists of files in the directory selected in DirectoryTree component 
- * 
- * @author Jongwook
- */
 public class FileList extends JTable {
 	public static final long serialVersionUID = 0L;
 	
 	private static final DateFormat DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-	protected final String[] COLUMNS = {"파일 이름", "크기", "종류", "날짜"};
-	protected final Object[][] ROWS = {};
-
 	protected static final int COLUMN_FILENAME		= 0;
 	protected static final int COLUMN_SIZE			= 1;
 	protected static final int COLUMN_EXT			= 2;
 	protected static final int COLUMN_DATE			= 3;
+
+	protected final String[] COLUMNS = {"파일 이름", "크기", "종류", "날짜"};
+	protected final Object[][] ROWS = {};
 	
 	protected class HeaderRenderer extends DefaultTableCellRenderer {
 		public static final long serialVersionUID = 0L;
 
-		private TableCellRenderer PrevRenderer;
+		private TableCellRenderer rendererPrev;
 		
 		private int mode = COLUMN_FILENAME;
 		private boolean asc = true;
 				
 		public HeaderRenderer setOriginalTableCellRenderer(TableCellRenderer tcr) {
-			PrevRenderer = tcr;
+			rendererPrev = tcr;
 			return this;
 		}
 		
-		public void SetSort(int m, boolean a) {
+		public void setSort(int m, boolean a) {
 			mode = m;
 			asc = a;
 		}
 		
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {	
-			JLabel label = (JLabel)PrevRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			JLabel label = (JLabel)rendererPrev.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			
 			if (column == mode) {
 				URL uicon = getClass().getResource("/res/sort_" + (asc ? "asc" : "desc") + ".png");
@@ -82,10 +77,10 @@ public class FileList extends JTable {
 	protected static class ListRenderer extends DefaultTableCellRenderer {
 		public static final long serialVersionUID = 0L;
 		
-		private static ListRenderer TheInstance;
+		private static ListRenderer theInstance;
 		
 		public static ListRenderer GetInstance() {
-			return (TheInstance == null) ? TheInstance = new ListRenderer() : TheInstance;
+			return (theInstance == null) ? (theInstance = new ListRenderer()) : theInstance;
 		}
 		
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {		
@@ -95,18 +90,18 @@ public class FileList extends JTable {
 			
 			switch (column) {
 			case COLUMN_FILENAME:		// File name
-				label.setIcon(FileInfo.GetIcon(ext));	// File icon
+				label.setIcon(FileUtility.getIcon(ext));	// File icon
 				label.setText(text);
 				label.setHorizontalAlignment(JLabel.LEFT);
 				break;
 			case COLUMN_SIZE:		// File size
 				label.setIcon(null);
-				label.setText(((Long)value < 0) ? "" : FileSize((Long)value));
+				label.setText(((Long)value < 0) ? "" : FileUtility.getFileSize((Long)value));
 				label.setHorizontalAlignment(JLabel.RIGHT);
 				break;
 			case COLUMN_EXT:		// File description
 				label.setIcon(null);
-				label.setText(FileInfo.GetDescription(text));
+				label.setText(FileUtility.getDescription(text));
 				label.setHorizontalAlignment(JLabel.LEFT);
 				break;
 			case COLUMN_DATE:		// File modified date
@@ -123,7 +118,7 @@ public class FileList extends JTable {
 
 	// Comparator for sorting file list
 	protected static class ListComparator implements Comparator<Object> {		
-		private static ListComparator[][] TheInstances;
+		private static ListComparator[][] theInstances;
 		
 		private final int mode;
 		private final boolean asc;
@@ -133,11 +128,11 @@ public class FileList extends JTable {
 			asc = a;
 		}
 		
-		public static ListComparator GetInstance(int m, boolean a) {
-			if (TheInstances == null)
-				TheInstances = new ListComparator[4][2];
+		public static ListComparator getInstance(int m, boolean a) {
+			if (theInstances == null)
+				theInstances = new ListComparator[4][2];
 			int j = a ? 0 : 1;
-			return (TheInstances[m][j] == null) ? TheInstances[m][j] = new ListComparator(m, a) : TheInstances[m][j];
+			return (theInstances[m][j] == null) ? theInstances[m][j] = new ListComparator(m, a) : theInstances[m][j];
 		}
 		
 		public int compare(Object arg0, Object arg1) {
@@ -188,21 +183,8 @@ public class FileList extends JTable {
 		setDefaultRenderer(Object.class, ListRenderer.GetInstance());
 	}
 	
-	protected void Sort(int mode, boolean asc) {
+	protected void sort(int mode, boolean asc) {
 		Vector<?> mdata = ((DefaultTableModel)getModel()).getDataVector();
-		Collections.sort(mdata, ListComparator.GetInstance(mode, asc));
-	}
-
-	protected static String FileSize(long size) {
-		float fsize = size;
-		String[] units = {"B", "KB", "MB", "GB"};
-		
-		for (int i=0; i<units.length; i++) {
-			if (fsize < 1024.0) 
-				return String.format("%.1f %s", fsize, units[i]);
-			fsize /= 1024.0;
-		}
-		
-		return String.format("%.1f TB", fsize);
-	}
+		Collections.sort(mdata, ListComparator.getInstance(mode, asc));
+	}	
 }
