@@ -57,4 +57,25 @@ public class FileUtility {
 		
 		return String.format("%.1f TB", size);
 	}
+	
+	public static String getTimeString(float time) {
+		double ltime = Math.ceil(time);
+		int h, m, s;
+		String stime = "";
+		
+		h = (int)Math.floor(ltime / 3600);
+		if (h > 0)
+			stime += h + "시간 ";
+		ltime %= 3600;
+		
+		m = (int)Math.floor(ltime / 60);
+		if (m > 0)
+			stime += m + "분 ";
+		ltime %= 60;
+		
+		s = (int)ltime;
+		stime += s + "초";
+		
+		return stime;
+	}
 }

@@ -32,6 +32,7 @@ public interface MsgListener {
 	public static final int DOWNLOAD_START	= 62;
 	public static final int DOWNLOAD_FAIL		= 63;
 	public static final int DOWNLOAD_DONE		= 64;
+	public static final int DOWNLOAD_UPDATE	= 65;
 	
 	public static final int UPLOAD_CLICK		= 71;
 	public static final int UPLOAD_START		= 72;

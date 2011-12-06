@@ -51,7 +51,7 @@ public class WebhardFrame extends JFrame {
 		getContentPane().setBackground(Color.lightGray);
 
 		// Add the webhard main panel
-		add(new WebhardPanel());
+		add(WebhardPanel.getInstance());
 		
 		// Add listener for closing the window 
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

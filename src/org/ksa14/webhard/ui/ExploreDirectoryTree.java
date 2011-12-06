@@ -101,7 +101,7 @@ public class ExploreDirectoryTree  extends JTree implements TreeSelectionListene
 					SftpList.getDirectoryList(pathLast.toString());
 				} else {
 					MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "디렉토리 탐색 완료");
-					updateTreeDone(new Vector<String>());
+					MsgBroadcaster.broadcastMsg(MsgListener.DIRTREE_DONE, new Vector<String>());
 				}
 			}
 		}.start();

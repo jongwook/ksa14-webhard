@@ -28,6 +28,7 @@ public class ExploreFileList extends FileList implements MsgListener {
 	
 	private class HeaderMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
+			// When header clicked
 			JTable table = getInstance();
 			int icol = table.getColumnModel().getColumnIndexAtX(e.getX());
 
@@ -53,11 +54,10 @@ public class ExploreFileList extends FileList implements MsgListener {
 				JTable table = (JTable)e.getSource();
 				TableModel model = table.getModel();
 				int row = table.getSelectedRow();
-				if (model.getValueAt(row, COLUMN_EXT).equals(".")) {	// If this is a directory
+				if (model.getValueAt(row, COLUMN_EXT).equals("."))	// If this is a directory
 					ExploreDirectoryTree.getInstance().changePathChild((String)model.getValueAt(row, COLUMN_FILENAME));
-				} else {
-					
-				}
+				else
+					MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_CLICK, null);
 			}
 		}
 	}

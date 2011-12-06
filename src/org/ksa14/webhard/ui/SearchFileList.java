@@ -28,6 +28,7 @@ public class SearchFileList extends FileList  implements MsgListener {
 	
 	private class HeaderMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
+			// When header clicked
 			JTable table = getInstance();
 			int icol = table.getColumnModel().getColumnIndexAtX(e.getX());
 
