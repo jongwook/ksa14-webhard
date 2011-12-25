@@ -13,6 +13,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -49,6 +50,31 @@ public class ExploreDirectoryTree  extends JTree implements TreeSelectionListene
 
 	private DefaultMutableTreeNode nodeTop, nodeLast;
 	private DirectoryTreePath pathLast;
+	
+	public void valueChanged(TreeSelectionEvent e) {
+		DefaultMutableTreeNode node = (DefaultMutableTreeNode)getLastSelectedPathComponent();
+		if (node == nodeLast)
+			return;
+		
+		pathLast = new DirectoryTreePath(e.getPath());
+		nodeLast = node;
+		
+		updateTree();
+	}
+
+	public void treeWillExpand(TreeExpansionEvent e) {
+		DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
+		if ((node == nodeTop) || (node == nodeLast))
+			return;
+		
+		pathLast = new DirectoryTreePath(e.getPath());
+		nodeLast = node;
+		
+		updateTree();
+		setSelectionPath(pathLast);
+	}
+
+	public void treeWillCollapse(TreeExpansionEvent e) {}
 
 	private ExploreDirectoryTree(DefaultMutableTreeNode tnode) {
 		super(tnode);
@@ -120,12 +146,30 @@ public class ExploreDirectoryTree  extends JTree implements TreeSelectionListene
 			node.add(new DefaultMutableTreeNode("..."));
 			nodeLast.add(node);
 		}
-
+		
 		collapsePath(pathLast);
 		expandPath(pathLast);
 		
 		setEnabled(true);
 		WebhardFrame.getInstance().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+	}
+	
+	public void addDirectory(String dirname) {
+		DefaultTreeModel model = (DefaultTreeModel)getModel();
+
+		// Create dummy child
+		DefaultMutableTreeNode node = new DefaultMutableTreeNode(dirname);
+		node.add(new DefaultMutableTreeNode("..."));
+		
+		int ccnt = nodeLast.getChildCount();
+		int i;
+		for (i=0; i<ccnt; i++) {
+			if (nodeLast.getChildAt(i).toString().compareToIgnoreCase(dirname) > 0)
+				break;
+		}
+		
+		model.insertNodeInto(node, nodeLast, i);
+		model.reload(nodeLast);
 	}
 	
 	public void changePathChild(String child) {
@@ -181,31 +225,6 @@ public class ExploreDirectoryTree  extends JTree implements TreeSelectionListene
 	public String getPath() {
 		return pathLast.toString();
 	}
-	
-	public void valueChanged(TreeSelectionEvent e) {
-		DefaultMutableTreeNode node = (DefaultMutableTreeNode)getLastSelectedPathComponent();
-		if (node == nodeLast)
-			return;
-		
-		pathLast = new DirectoryTreePath(e.getPath());
-		nodeLast = node;
-		
-		updateTree();
-	}
-
-	public void treeWillExpand(TreeExpansionEvent e) {
-		DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
-		if ((node == nodeTop) || (node == nodeLast))
-			return;
-		
-		pathLast = new DirectoryTreePath(e.getPath());
-		nodeLast = node;
-		
-		updateTree();
-		setSelectionPath(pathLast);
-	}
-
-	public void treeWillCollapse(TreeExpansionEvent e) {}
 	
 	public void receiveMsg(final int type, final Object arg) {
 		SwingUtilities.invokeLater(new Runnable() {

@@ -151,9 +151,9 @@ public class FileList extends JTable {
 				if (s0 ^ s1)
 					return (s0 ? -sign : sign);
 				else
-					return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
+					return sign * ((String)v0.elementAt(mode)).compareToIgnoreCase((String)v1.elementAt(mode));
 			} else if (mode == COLUMN_EXT) {
-				return sign * ((String)v0.elementAt(mode)).compareTo((String)v1.elementAt(mode));
+				return sign * ((String)v0.elementAt(mode)).compareToIgnoreCase((String)v1.elementAt(mode));
 			} 
 			return 0;
 		}

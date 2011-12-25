@@ -14,7 +14,6 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 
 import org.ksa14.webhard.sftp.SftpTransfer;
 import org.ksa14.webhard.sftp.SftpTransfer.SftpTransferData;
@@ -57,17 +56,20 @@ public class TransferList extends JTable {
 				break;
 			case COLUMN_PAUSE:		// Transfer pause button
 				label.setIcon(null);
-				label.setText(text);
 				if (text.equals("pause"))
 					label.setIcon(new ImageIcon(getClass().getResource("/res/transfer_pause.png")));
 				else if (text.equals("resume"))
 					label.setIcon(new ImageIcon(getClass().getResource("/res/transfer_resume.png")));
+				label.setText("");
 				label.setHorizontalAlignment(JLabel.LEFT);
 				break;
 			case COLUMN_STOP:		// Transfer stop button
 				label.setIcon(null);
 				if (text.equals("stop"))
 					label.setIcon(new ImageIcon(getClass().getResource("/res/transfer_stop.png")));
+				else if (text.equals("delete"))
+					label.setIcon(new ImageIcon(getClass().getResource("/res/transfer_delete.png")));
+				label.setText("");
 				label.setHorizontalAlignment(JLabel.LEFT);
 				break;
 			default:
@@ -91,9 +93,14 @@ public class TransferList extends JTable {
 			DefaultTableModel model = (DefaultTableModel)getModel();
 			int row = rowAtPoint(e.getPoint());
 			int col = columnAtPoint(e.getPoint());
+			String text = (String)model.getValueAt(row, col);
 			
 			if (col == COLUMN_PAUSE) {
 			} else if (col == COLUMN_STOP) {
+				if (text.equals("delete")) {
+					removeRow(row);
+				}
+					
 			}
 		}
 	}
@@ -147,9 +154,9 @@ public class TransferList extends JTable {
 		case SftpTransfer.MODE_NONE:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
-			model.setValueAt("", filerow, COLUMN_STATUS);
+			model.setValueAt("전송 대기", filerow, COLUMN_STATUS);
 			model.setValueAt("", filerow, COLUMN_PAUSE);
-			model.setValueAt("", filerow, COLUMN_STOP);
+			model.setValueAt("delete", filerow, COLUMN_STOP);
 			break;
 		case SftpTransfer.MODE_RUNNING:
 			float rtime = (filedata.fileSize - filedata.fileSizeDone) / filedata.fileSpeed;
@@ -162,17 +169,40 @@ public class TransferList extends JTable {
 		case SftpTransfer.MODE_PAUSED:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
-			model.setValueAt("일시 정지", filerow, COLUMN_STATUS);
+			model.setValueAt("전송 일시정지", filerow, COLUMN_STATUS);
 			model.setValueAt("resume", filerow, COLUMN_PAUSE);
 			model.setValueAt("stop", filerow, COLUMN_STOP);
+			break;
+		case SftpTransfer.MODE_STOPPED:
+			model.setValueAt("", filerow, COLUMN_SPEED);
+			model.setValueAt("", filerow, COLUMN_TIME);
+			model.setValueAt("전송 중지", filerow, COLUMN_STATUS);
+			model.setValueAt("", filerow, COLUMN_PAUSE);
+			model.setValueAt("delete", filerow, COLUMN_STOP);
 			break;
 		case SftpTransfer.MODE_FINISHED:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
 			model.setValueAt("전송 완료", filerow, COLUMN_STATUS);
 			model.setValueAt("", filerow, COLUMN_PAUSE);
-			model.setValueAt("", filerow, COLUMN_STOP);
+			model.setValueAt("delete", filerow, COLUMN_STOP);
 			break;
 		}
+	}
+	
+	protected void removeRow(int row) {
+		SftpTransferData filedata = fileTransfer.remove(row);
+		((DefaultTableModel)getModel()).removeRow(row);
+		
+		filedata.thread = null;
+		filedata = null;
+	}
+	
+	protected void removeRow(SftpTransferData filedata) {
+		int filerow = fileTransfer.indexOf(filedata);
+		if (filerow < 0)
+			return;
+		
+		removeRow(filerow);
 	}
 }

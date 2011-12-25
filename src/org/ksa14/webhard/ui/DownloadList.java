@@ -34,7 +34,6 @@ public class DownloadList extends TransferList implements MsgListener {
 						SftpTransferData filedata = (SftpTransferData)fileiter.next();
 						fileTransfer.add(filedata);
 						((DefaultTableModel)getModel()).addRow(new Object[] {filedata.fileName, "", "", "", "", "", ""});
-						filedata.thread.start();
 						updateList(filedata);
 					}
 				}

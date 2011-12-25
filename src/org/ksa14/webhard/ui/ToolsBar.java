@@ -13,12 +13,14 @@ import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 
 import org.ksa14.webhard.MsgBroadcaster;
 import org.ksa14.webhard.MsgListener;
+import org.ksa14.webhard.sftp.SftpList;
 
 public class ToolsBar extends JToolBar {
 	public static final long serialVersionUID = 0L;
@@ -64,6 +66,13 @@ public class ToolsBar extends JToolBar {
 			
 			if (e.getActionCommand().equals("search"))
 				doSearch();
+
+			if (e.getActionCommand().equals("newdirectory")) {
+				String dirname = JOptionPane.showInputDialog(null, "폴더 이름을 입력해주세요", "새 폴더", JOptionPane.PLAIN_MESSAGE);
+				
+				if (dirname != null)
+					SftpList.createDirectory(ExploreDirectoryTree.getInstance().getPath(), dirname);
+			}
 		}
 	}
 	

@@ -38,6 +38,7 @@ public interface MsgListener {
 	public static final int UPLOAD_START		= 72;
 	public static final int UPLOAD_FAIL		= 73;
 	public static final int UPLOAD_DONE		= 74;
+	public static final int UPLOAD_UPDATE		= 75;
 	
 	public void receiveMsg(final int type, final Object arg);
 }

@@ -19,7 +19,8 @@ public class SftpTransfer {
 	public static final int MODE_NONE = 0;
 	public static final int MODE_RUNNING = 1;
 	public static final int MODE_PAUSED = 2;
-	public static final int MODE_FINISHED = 3;
+	public static final int MODE_STOPPED = 3;
+	public static final int MODE_FINISHED = 4;
 	
 	public static final int OVERWRITE_ASK = 0;
 	public static final int OVERWRITE_YES = 1;
@@ -131,7 +132,7 @@ public class SftpTransfer {
 						} catch (Exception e) {
 							MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "다운로드에 실패했습니다");
 							MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "다운로드에 실패했습니다");
-							MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_FAIL, null);
+							MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_FAIL, fileitem);
 						}
 					}
 				};

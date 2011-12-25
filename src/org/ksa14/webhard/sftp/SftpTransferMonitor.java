@@ -22,6 +22,8 @@ public class SftpTransferMonitor implements SftpProgressMonitor {
 	public boolean count(long count) {
 		if (fileData.mode == SftpTransfer.MODE_RUNNING)
 			fileData.fileSizeDone += count;
+		else
+			return false;
 		
 		long ctime = System.currentTimeMillis();
 		if ((ctime - fileData.prevTime) >= 500) {
