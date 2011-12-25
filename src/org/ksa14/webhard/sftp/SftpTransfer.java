@@ -1,6 +1,9 @@
 package org.ksa14.webhard.sftp;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -17,10 +20,13 @@ public class SftpTransfer {
 	public static final boolean TRANSFER_DOWN = false;
 
 	public static final int MODE_NONE = 0;
-	public static final int MODE_RUNNING = 1;
-	public static final int MODE_PAUSED = 2;
-	public static final int MODE_STOPPED = 3;
-	public static final int MODE_FINISHED = 4;
+	public static final int MODE_STARTED = 1;
+	public static final int MODE_RUNNING = 2;
+	public static final int MODE_PAUSED = 3;
+	public static final int MODE_STOPPED = 4;
+	public static final int MODE_FINISHED = 5;
+	
+	public static final int MAX_TRANSFER = 5;
 	
 	public static final int OVERWRITE_ASK = 0;
 	public static final int OVERWRITE_YES = 1;
@@ -125,10 +131,23 @@ public class SftpTransfer {
 					public void run() {
 						try {
 							ChannelSftp channel = SftpAdapter.getNewChannel();
-							File destdir = (new File(fileitem.destination)).getParentFile();
+							File destfile = new File(fileitem.destination);
+							File destdir = destfile.getParentFile();
 							if (!destdir.isDirectory() && !destdir.mkdirs())
 								throw new Exception();
-							channel.get(fileitem.source, fileitem.destination, new SftpTransferMonitor(fileitem), fileitem.overwrite ? ChannelSftp.OVERWRITE : ChannelSftp.RESUME);
+							
+							byte[] inbuf = new byte[1024];
+							long sftpskip = fileitem.overwrite ? 0 : destfile.length();
+							fileitem.fileSizeDone = sftpskip;
+							BufferedOutputStream fileout = new BufferedOutputStream(new FileOutputStream(new File(fileitem.destination), !fileitem.overwrite));
+							BufferedInputStream sftpin = new BufferedInputStream(channel.get(fileitem.source, new SftpTransferMonitor(fileitem), sftpskip));
+							
+							while (sftpin.read(inbuf, 0, 1024) >= 0) {
+								fileout.write(inbuf);
+								fileout.flush();
+							}
+							
+							fileout.close();
 						} catch (Exception e) {
 							MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "다운로드에 실패했습니다");
 							MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "다운로드에 실패했습니다");

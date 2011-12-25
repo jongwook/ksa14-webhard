@@ -150,6 +150,8 @@ public class WebhardPanel extends JPanel implements MsgListener {
 						srow = fileExplore.getSelectedRows();
 					else if (ipane == PANE_SEARCH)
 						srow = fileSearch.getSelectedRows();
+					else
+						((CardLayout)panelFile.getLayout()).show(panelFile, "transfer");
 					
 					if (srow.length > 0) {
 						JFileChooser savefile = new JFileChooser();
@@ -181,10 +183,6 @@ public class WebhardPanel extends JPanel implements MsgListener {
 							paneTransfer.setSelectedIndex(TRANSFER_DOWNLOAD);
 						}
 					}
-				}
-
-				if (type == MsgListener.DOWNLOAD_FAIL) {
-					
 				}
 			}
 		});

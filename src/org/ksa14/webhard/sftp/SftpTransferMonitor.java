@@ -35,11 +35,15 @@ public class SftpTransferMonitor implements SftpProgressMonitor {
 			MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_UPDATE, fileData);
 		}
 		
+		if ((fileData.mode == SftpTransfer.MODE_STOPPED) || (fileData.mode == SftpTransfer.MODE_PAUSED))
+			return false;
+		
 		return true;
 	}
 
 	public void end() {
-		fileData.mode = SftpTransfer.MODE_FINISHED;
-		MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_DONE, fileData);
+		if (fileData.fileSize <= fileData.fileSizeDone)
+			fileData.mode = SftpTransfer.MODE_FINISHED;
+		MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_UPDATE, fileData);
 	}
 }

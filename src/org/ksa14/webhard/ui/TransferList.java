@@ -49,7 +49,13 @@ public class TransferList extends JTable {
 				label.setHorizontalAlignment(JLabel.LEFT);
 				break;
 			case COLUMN_SPEED:		// Transfer speed
+				label.setIcon(null);
+				label.setHorizontalAlignment(JLabel.RIGHT);
+				break;
 			case COLUMN_TIME:		// Remaining time
+				label.setIcon(null);
+				label.setHorizontalAlignment(JLabel.RIGHT);
+				break;
 			case COLUMN_STATUS:		// Transfer status
 				label.setIcon(null);
 				label.setHorizontalAlignment(JLabel.LEFT);
@@ -96,11 +102,17 @@ public class TransferList extends JTable {
 			String text = (String)model.getValueAt(row, col);
 			
 			if (col == COLUMN_PAUSE) {
+				if (text.equals("pause"))
+					pauseTransfer(row);
+				else if (text.equals("resume"))
+					fileTransfer.get(row).mode = SftpTransfer.MODE_NONE;
 			} else if (col == COLUMN_STOP) {
-				if (text.equals("delete")) {
+				if (text.equals("stop")) {
+					fileTransfer.get(row).mode = SftpTransfer.MODE_STOPPED;
+					updateList(row);
+				} else if (text.equals("delete")) {
 					removeRow(row);
 				}
-					
 			}
 		}
 	}
@@ -141,14 +153,30 @@ public class TransferList extends JTable {
 		getColumnModel().getColumn(COLUMN_STOP).setMaxWidth(20);
 		getColumnModel().getColumn(COLUMN_STOP).setMinWidth(20);
 		getColumnModel().getColumn(COLUMN_STOP).setPreferredWidth(20);
+		
+		new Thread() {
+			public void run() {
+				while (true) {
+					startNextTransfer();
+					try {Thread.sleep(1);} catch (InterruptedException e) {e.printStackTrace();}
+				}
+			}
+		}.start();
 	}
 	
 	protected void updateList(SftpTransferData filedata) {
-		final DefaultTableModel model = (DefaultTableModel)getModel();
-		
-		int filerow = fileTransfer.indexOf(filedata);
-		if (filerow < 0)
+		updateList(filedata, fileTransfer.indexOf(filedata));
+	}
+	
+	protected void updateList(int filerow) {
+		updateList(fileTransfer.get(filerow), filerow);
+	}
+	
+	protected void updateList(SftpTransferData filedata, int filerow) {
+		if ((filedata == null) || (filerow < 0))
 			return;
+		
+		final DefaultTableModel model = (DefaultTableModel)getModel();
 		
 		switch (filedata.mode) {
 		case SftpTransfer.MODE_NONE:
@@ -157,6 +185,13 @@ public class TransferList extends JTable {
 			model.setValueAt("전송 대기", filerow, COLUMN_STATUS);
 			model.setValueAt("", filerow, COLUMN_PAUSE);
 			model.setValueAt("delete", filerow, COLUMN_STOP);
+			break;
+		case SftpTransfer.MODE_STARTED:
+			model.setValueAt("", filerow, COLUMN_SPEED);
+			model.setValueAt("", filerow, COLUMN_TIME);
+			model.setValueAt("전송 준비중", filerow, COLUMN_STATUS);
+			model.setValueAt("pause", filerow, COLUMN_PAUSE);
+			model.setValueAt("stop", filerow, COLUMN_STOP);
 			break;
 		case SftpTransfer.MODE_RUNNING:
 			float rtime = (filedata.fileSize - filedata.fileSizeDone) / filedata.fileSpeed;
@@ -191,18 +226,42 @@ public class TransferList extends JTable {
 	}
 	
 	protected void removeRow(int row) {
-		SftpTransferData filedata = fileTransfer.remove(row);
-		((DefaultTableModel)getModel()).removeRow(row);
+		if (row < 0)
+			return;
 		
-		filedata.thread = null;
-		filedata = null;
+		fileTransfer.remove(row);
+		((DefaultTableModel)getModel()).removeRow(row);
 	}
 	
 	protected void removeRow(SftpTransferData filedata) {
-		int filerow = fileTransfer.indexOf(filedata);
-		if (filerow < 0)
-			return;
-		
-		removeRow(filerow);
+		removeRow(fileTransfer.indexOf(filedata));
 	}
+	
+	protected void startNextTransfer() {
+		int runcnt = 0;
+		int filecnt = fileTransfer.size();
+		
+		for (int i=0; i<filecnt; i++) {
+			int filemode = fileTransfer.get(i).mode;
+			if ((filemode == SftpTransfer.MODE_STARTED) || (filemode == SftpTransfer.MODE_RUNNING) || (filemode == SftpTransfer.MODE_PAUSED)) {
+				runcnt++;
+				if (runcnt >= SftpTransfer.MAX_TRANSFER)
+					return;
+			}
+		}
+		
+		for (int i=0; i<filecnt; i++) {
+			SftpTransferData filedata = fileTransfer.get(i);
+			if (filedata.mode == SftpTransfer.MODE_NONE) {
+				filedata.mode = SftpTransfer.MODE_STARTED;
+				filedata.thread.start();
+				updateList(filedata);
+				runcnt++;
+				if (runcnt >= SftpTransfer.MAX_TRANSFER)
+					return;
+			}
+		}
+	}
+	
+	protected void pauseTransfer(int row) {}
 }
