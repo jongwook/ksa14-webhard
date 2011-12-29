@@ -4,6 +4,7 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.io.File;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -48,9 +49,8 @@ public class WebhardPanel extends JPanel implements MsgListener {
 	private ExploreFileList fileExplore;
 	private SearchFileList fileSearch;
 	private DownloadList fileDownload;
-	/*
 	private UploadList fileUpload;
-	*/
+	
 	public WebhardPanel() {
 		// Set layout and color
 		setLayout(new BorderLayout());
@@ -88,9 +88,14 @@ public class WebhardPanel extends JPanel implements MsgListener {
 		fileDownload = DownloadList.getInstance();
 		JScrollPane paneDFile = new JScrollPane(fileDownload);
 		paneDFile.getViewport().setBackground(Color.white);
+
+		fileUpload = UploadList.getInstance();
+		JScrollPane paneUFile = new JScrollPane(fileUpload);
+		paneUFile.getViewport().setBackground(Color.white);
 		
 		paneTransfer = new JTabbedPane();
 		paneTransfer.addTab("다운로드", paneDFile);
+		paneTransfer.addTab("업로드", paneUFile);
 
 		panelFile.add(paneExplore, "explore");
 		panelFile.add(paneSearch, "search");
@@ -141,6 +146,17 @@ public class WebhardPanel extends JPanel implements MsgListener {
 
 				if (type == MsgListener.PANEL_TRANSFER)
 					((CardLayout)panelFile.getLayout()).show(panelFile, "transfer");
+
+				if (type == MsgListener.PANEL_DOWNLOAD) {
+					((CardLayout)panelFile.getLayout()).show(panelFile, "transfer");
+					paneTransfer.setSelectedIndex(TRANSFER_DOWNLOAD);
+				}
+
+				if (type == MsgListener.PANEL_UPLOAD) {
+					((CardLayout)panelFile.getLayout()).show(panelFile, "transfer");
+					paneTransfer.setSelectedIndex(TRANSFER_UPLOAD);
+				}
+				
 				
 				if (type == MsgListener.DOWNLOAD_CLICK) {
 					int ipane = getPaneIndex();
@@ -150,8 +166,6 @@ public class WebhardPanel extends JPanel implements MsgListener {
 						srow = fileExplore.getSelectedRows();
 					else if (ipane == PANE_SEARCH)
 						srow = fileSearch.getSelectedRows();
-					else
-						((CardLayout)panelFile.getLayout()).show(panelFile, "transfer");
 					
 					if (srow.length > 0) {
 						JFileChooser savefile = new JFileChooser();
@@ -178,10 +192,31 @@ public class WebhardPanel extends JPanel implements MsgListener {
 									SftpTransfer.download(filelist);
 								}
 							}.start();
-		
-							((CardLayout)panelFile.getLayout()).show(panelFile, "transfer");
-							paneTransfer.setSelectedIndex(TRANSFER_DOWNLOAD);
 						}
+					}
+				}
+				
+				if (type == MsgListener.UPLOAD_CLICK) {
+					JFileChooser openfile = new JFileChooser();
+					openfile.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+					openfile.setMultiSelectionEnabled(true);
+					openfile.setDialogTitle("업로드할 파일/폴더");
+					if (openfile.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+						File[] upfiles = openfile.getSelectedFiles();
+						final Vector<SftpTransferData> filelist = new Vector<SftpTransferData>();
+						for (File upf : upfiles) {
+							String pathsrc = upf.getParent();
+							String pathdest = dirExplore.getPath();
+							String filename = upf.getName();
+							boolean isdir = upf.isDirectory();
+							filelist.add(new SftpTransferData(pathsrc, pathdest, filename, isdir, SftpTransfer.TRANSFER_UP));
+						}
+						
+						new Thread() {
+							public void run() {
+								SftpTransfer.upload(filelist);
+							}
+						}.start();
 					}
 				}
 			}

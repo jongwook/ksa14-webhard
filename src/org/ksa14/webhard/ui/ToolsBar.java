@@ -60,9 +60,15 @@ public class ToolsBar extends JToolBar {
 			if (e.getActionCommand().equals("transferpane"))
 				MsgBroadcaster.broadcastMsg(MsgListener.PANEL_TRANSFER, null);
 
-			if (e.getActionCommand().equals("download"))
+			if (e.getActionCommand().equals("download")) {
 				MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_CLICK, null);
-			
+				MsgBroadcaster.broadcastMsg(MsgListener.PANEL_DOWNLOAD, null);
+			}
+
+			if (e.getActionCommand().equals("upload")) {
+				MsgBroadcaster.broadcastMsg(MsgListener.UPLOAD_CLICK, null);
+				MsgBroadcaster.broadcastMsg(MsgListener.PANEL_UPLOAD, null);
+			}
 			
 			if (e.getActionCommand().equals("search"))
 				doSearch();

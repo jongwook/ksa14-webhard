@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -98,11 +99,13 @@ public class FileList extends JTable {
 				label.setIcon(null);
 				label.setText(((Long)value < 0) ? "" : FileUtility.getFileSize((Long)value));
 				label.setHorizontalAlignment(JLabel.RIGHT);
+				label.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 				break;
 			case COLUMN_EXT:		// File description
 				label.setIcon(null);
 				label.setText(FileUtility.getDescription(text));
 				label.setHorizontalAlignment(JLabel.LEFT);
+				label.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 				break;
 			case COLUMN_DATE:		// File modified date
 				label.setIcon(null);

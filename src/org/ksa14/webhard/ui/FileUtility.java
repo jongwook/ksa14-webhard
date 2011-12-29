@@ -51,7 +51,7 @@ public class FileUtility {
 		
 		for (int i=0; i<units.length; i++) {
 			if (size < 1024.0) 
-				return String.format("%.1f %s", size, units[i]);
+				return String.format("%.1f%s", size, units[i]);
 			size /= 1024.0;
 		}
 		

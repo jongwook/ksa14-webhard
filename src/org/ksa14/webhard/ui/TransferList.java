@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -21,15 +22,16 @@ import org.ksa14.webhard.sftp.SftpTransfer.SftpTransferData;
 public class TransferList extends JTable {
 	public static final long serialVersionUID = 0L;
 
-	protected final String[] COLUMNS = {"파일 이름", "전송 속도", "남은 시간", "진행상황", "", ""};
+	protected final String[] COLUMNS = {"파일 이름", "전송 속도", "남은 시간", "파일 크기", "진행상황", "", ""};
 	protected final Object[][] ROWS = {};
 
 	protected static final int COLUMN_FILENAME		= 0;
 	protected static final int COLUMN_SPEED			= 1;
 	protected static final int COLUMN_TIME			= 2;
-	protected static final int COLUMN_STATUS			= 3;
-	protected static final int COLUMN_PAUSE			= 4;
-	protected static final int COLUMN_STOP			= 5;
+	protected static final int COLUMN_SIZE			= 3;
+	protected static final int COLUMN_STATUS			= 4;
+	protected static final int COLUMN_PAUSE			= 5;
+	protected static final int COLUMN_STOP			= 6;
 	
 	protected Vector<SftpTransferData> fileTransfer = new Vector<SftpTransferData>();
 	
@@ -51,14 +53,37 @@ public class TransferList extends JTable {
 			case COLUMN_SPEED:		// Transfer speed
 				label.setIcon(null);
 				label.setHorizontalAlignment(JLabel.RIGHT);
+				label.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 				break;
 			case COLUMN_TIME:		// Remaining time
 				label.setIcon(null);
 				label.setHorizontalAlignment(JLabel.RIGHT);
+				label.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+				break;
+			case COLUMN_SIZE:		// Remaining time
+				label.setIcon(null);
+				label.setHorizontalAlignment(JLabel.RIGHT);
+				label.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 				break;
 			case COLUMN_STATUS:		// Transfer status
 				label.setIcon(null);
 				label.setHorizontalAlignment(JLabel.LEFT);
+				label.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+				if (text.equals("ready")) {
+					label.setText("전송 대기");
+				} else if (text.equals("started")) {
+					label.setText("전송 준비중");
+				} else if (text.equals("paused")) {
+					label.setText("전송 일시정지");
+				} else if (text.equals("stopped")) {
+					label.setText("전송 중지");
+				} else if (text.equals("finished")) {
+					label.setText("전송 완료");
+				} else {
+					float prog = Float.parseFloat(text);
+					label.setText(prog + "%");
+					
+				}
 				break;
 			case COLUMN_PAUSE:		// Transfer pause button
 				label.setIcon(null);
@@ -144,9 +169,10 @@ public class TransferList extends JTable {
 		addMouseListener(new ListMouseListener());
 
 		getColumnModel().getColumn(COLUMN_FILENAME).setPreferredWidth(300);
-		getColumnModel().getColumn(COLUMN_SPEED).setPreferredWidth(50);
-		getColumnModel().getColumn(COLUMN_TIME).setPreferredWidth(50);
-		getColumnModel().getColumn(COLUMN_STATUS).setPreferredWidth(150);
+		getColumnModel().getColumn(COLUMN_SPEED).setPreferredWidth(30);
+		getColumnModel().getColumn(COLUMN_TIME).setPreferredWidth(80);
+		getColumnModel().getColumn(COLUMN_SIZE).setPreferredWidth(50);
+		getColumnModel().getColumn(COLUMN_STATUS).setPreferredWidth(100);
 		getColumnModel().getColumn(COLUMN_PAUSE).setMaxWidth(20);
 		getColumnModel().getColumn(COLUMN_PAUSE).setMinWidth(20);
 		getColumnModel().getColumn(COLUMN_PAUSE).setPreferredWidth(20);
@@ -158,7 +184,7 @@ public class TransferList extends JTable {
 			public void run() {
 				while (true) {
 					startNextTransfer();
-					try {Thread.sleep(1);} catch (InterruptedException e) {e.printStackTrace();}
+					try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 				}
 			}
 		}.start();
@@ -182,14 +208,16 @@ public class TransferList extends JTable {
 		case SftpTransfer.MODE_NONE:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
-			model.setValueAt("전송 대기", filerow, COLUMN_STATUS);
+			model.setValueAt("", filerow, COLUMN_SIZE);
+			model.setValueAt("ready", filerow, COLUMN_STATUS);
 			model.setValueAt("", filerow, COLUMN_PAUSE);
 			model.setValueAt("delete", filerow, COLUMN_STOP);
 			break;
 		case SftpTransfer.MODE_STARTED:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
-			model.setValueAt("전송 준비중", filerow, COLUMN_STATUS);
+			model.setValueAt("", filerow, COLUMN_SIZE);
+			model.setValueAt("started", filerow, COLUMN_STATUS);
 			model.setValueAt("pause", filerow, COLUMN_PAUSE);
 			model.setValueAt("stop", filerow, COLUMN_STOP);
 			break;
@@ -197,28 +225,32 @@ public class TransferList extends JTable {
 			float rtime = (filedata.fileSize - filedata.fileSizeDone) / filedata.fileSpeed;
 			model.setValueAt(FileUtility.getFileSize(filedata.fileSpeed) + "/s", filerow, COLUMN_SPEED);
 			model.setValueAt(FileUtility.getTimeString(rtime), filerow, COLUMN_TIME);
-			model.setValueAt(FileUtility.getFileSize(filedata.fileSizeDone) + "/" + FileUtility.getFileSize(filedata.fileSize) + " (" + String.format("%.1f", filedata.fileSizeDone * 100.0f / filedata.fileSize) + "%)", filerow, COLUMN_STATUS);
+			model.setValueAt(FileUtility.getFileSize(filedata.fileSizeDone) + "/" + FileUtility.getFileSize(filedata.fileSize), filerow, COLUMN_SIZE);
+			model.setValueAt(String.format("%.1f", filedata.fileSizeDone * 100.0f / filedata.fileSize), filerow, COLUMN_STATUS);
 			model.setValueAt("pause", filerow, COLUMN_PAUSE);
 			model.setValueAt("stop", filerow, COLUMN_STOP);
 			break;
 		case SftpTransfer.MODE_PAUSED:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
-			model.setValueAt("전송 일시정지", filerow, COLUMN_STATUS);
+			model.setValueAt(FileUtility.getFileSize(filedata.fileSizeDone) + "/" + FileUtility.getFileSize(filedata.fileSize), filerow, COLUMN_SIZE);
+			model.setValueAt("paused", filerow, COLUMN_STATUS);
 			model.setValueAt("resume", filerow, COLUMN_PAUSE);
 			model.setValueAt("stop", filerow, COLUMN_STOP);
 			break;
 		case SftpTransfer.MODE_STOPPED:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
-			model.setValueAt("전송 중지", filerow, COLUMN_STATUS);
+			model.setValueAt(FileUtility.getFileSize(filedata.fileSizeDone) + "/" + FileUtility.getFileSize(filedata.fileSize), filerow, COLUMN_SIZE);
+			model.setValueAt("stopped", filerow, COLUMN_STATUS);
 			model.setValueAt("", filerow, COLUMN_PAUSE);
 			model.setValueAt("delete", filerow, COLUMN_STOP);
 			break;
 		case SftpTransfer.MODE_FINISHED:
 			model.setValueAt("", filerow, COLUMN_SPEED);
 			model.setValueAt("", filerow, COLUMN_TIME);
-			model.setValueAt("전송 완료", filerow, COLUMN_STATUS);
+			model.setValueAt(FileUtility.getFileSize(filedata.fileSizeDone) + "/" + FileUtility.getFileSize(filedata.fileSize), filerow, COLUMN_SIZE);
+			model.setValueAt("finished", filerow, COLUMN_STATUS);
 			model.setValueAt("", filerow, COLUMN_PAUSE);
 			model.setValueAt("delete", filerow, COLUMN_STOP);
 			break;

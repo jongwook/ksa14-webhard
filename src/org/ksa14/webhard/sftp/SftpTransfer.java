@@ -38,6 +38,7 @@ public class SftpTransfer {
 		public String destination;
 		public String fileName;
 		public boolean isDir;
+		public boolean upload;
 		public long fileSize = 0;
 		public long fileSizeDone = 0;
 		public float fileSpeed = 0;
@@ -49,12 +50,13 @@ public class SftpTransfer {
 		
 		public SftpTransferData(String src, String dest, String file, boolean dir, boolean up) {
 			if (up) {
-				source = src + "\\" + file;
+				source = src + File.separator + file;
 				destination = dest + "/" + file;
 			} else {
 				source = src + "/" + file;
-				destination = dest + "\\" + file;
+				destination = dest + File.separator + file;
 			}
+			upload = up;
 			fileName = file;
 			isDir = dir;
 			mode = MODE_NONE;
@@ -139,7 +141,7 @@ public class SftpTransfer {
 							byte[] inbuf = new byte[1024];
 							long sftpskip = fileitem.overwrite ? 0 : destfile.length();
 							fileitem.fileSizeDone = sftpskip;
-							BufferedOutputStream fileout = new BufferedOutputStream(new FileOutputStream(new File(fileitem.destination), !fileitem.overwrite));
+							BufferedOutputStream fileout = new BufferedOutputStream(new FileOutputStream(destfile, !fileitem.overwrite));
 							BufferedInputStream sftpin = new BufferedInputStream(channel.get(fileitem.source, new SftpTransferMonitor(fileitem), sftpskip));
 							
 							while (sftpin.read(inbuf, 0, 1024) >= 0) {
@@ -167,5 +169,41 @@ public class SftpTransfer {
 
 		MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "다운로드 시작");
 		MsgBroadcaster.broadcastMsg(MsgListener.DOWNLOAD_START, filelist);
+	}
+	
+	public static void upload(Vector<SftpTransferData> filelist) {
+		try {
+			int i = 0;
+			while (i < filelist.size()) {
+				SftpTransferData fileitem = filelist.elementAt(i);
+				
+				if (fileitem.isDir) {
+					File upf = new File(fileitem.source);
+					File[] dirlist = upf.listFiles();
+					for (File lsf : dirlist)
+						filelist.add(new SftpTransferData(lsf.getParent(), fileitem.destination, lsf.getName(), lsf.isDirectory(), TRANSFER_UP));
+					filelist.remove(i);
+					continue;
+				} else {
+					fileitem.thread = new Thread() {
+						public void run() {
+							
+						}
+					};
+				}
+				
+				i++;
+			}
+			
+			
+		} catch (Exception e) {
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "업로드에 실패했습니다");
+			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "업로드에 실패했습니다");
+			MsgBroadcaster.broadcastMsg(MsgListener.UPLOAD_FAIL, null);
+			return;
+		}
+
+		MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "업로드 시작");
+		MsgBroadcaster.broadcastMsg(MsgListener.UPLOAD_START, filelist);
 	}
 }
