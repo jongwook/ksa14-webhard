@@ -74,10 +74,19 @@ public class ToolsBar extends JToolBar {
 				doSearch();
 
 			if (e.getActionCommand().equals("newdirectory")) {
-				String dirname = JOptionPane.showInputDialog(null, "폴더 이름을 입력해주세요", "새 폴더", JOptionPane.PLAIN_MESSAGE);
-				
-				if (dirname != null)
-					SftpList.createDirectory(ExploreDirectoryTree.getInstance().getPath(), dirname);
+				if (ExploreDirectoryTree.getInstance().getPath().equals("/")) {
+					MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "최상위 폴더에는 새로운 폴더를 만들 수 없습니다.");
+				} else {
+					final String dirname = JOptionPane.showInputDialog(null, "폴더 이름을 입력해주세요", "새 폴더", JOptionPane.PLAIN_MESSAGE);
+					
+					if (dirname != null) {
+						new Thread() {
+							public void run() {
+								SftpList.createDirectory(ExploreDirectoryTree.getInstance().getPath(), dirname);
+							}
+						}.start();
+					}
+				}
 			}
 		}
 	}

@@ -178,7 +178,7 @@ public class WebhardPanel extends JPanel implements MsgListener {
 							String pathdest = savefile.getSelectedFile().toString();
 							if (pathsrc.equals("/"))
 								pathsrc = "";
-							if (pathdest.charAt(pathdest.length() - 1) == '\\')
+							if (pathdest.charAt(pathdest.length() - 1) == File.separatorChar)
 								pathdest = pathdest.substring(0, pathdest.length() - 1);
 							
 							for (int row : srow) {
@@ -202,11 +202,19 @@ public class WebhardPanel extends JPanel implements MsgListener {
 					openfile.setMultiSelectionEnabled(true);
 					openfile.setDialogTitle("업로드할 파일/폴더");
 					if (openfile.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						File[] upfiles = openfile.getSelectedFiles();
 						final Vector<SftpTransferData> filelist = new Vector<SftpTransferData>();
-						for (File upf : upfiles) {
-							String pathsrc = upf.getParent();
-							String pathdest = dirExplore.getPath();
+						File[] filesup = openfile.getSelectedFiles();
+						String pathsrc = filesup[0].getParent();
+						String pathdest = dirExplore.getPath();
+						if (pathsrc.charAt(pathsrc.length() - 1) == File.separatorChar)
+							pathsrc = pathsrc.substring(0, pathsrc.length() - 1);
+						if (pathsrc.equals("/")) {
+							MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "최상위 폴더에는 업로드 할 수 없습니다.");
+							return;
+						}
+						
+						
+						for (File upf : filesup) {
 							String filename = upf.getName();
 							boolean isdir = upf.isDirectory();
 							filelist.add(new SftpTransferData(pathsrc, pathdest, filename, isdir, SftpTransfer.TRANSFER_UP));

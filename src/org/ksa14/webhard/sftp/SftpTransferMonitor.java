@@ -32,7 +32,7 @@ public class SftpTransferMonitor implements SftpProgressMonitor {
 			fileData.prevDone = fileData.fileSizeDone;
 			fileData.prevTime = ctime;
 			
-			MsgBroadcaster.broadcastMsg(fileData.upload ? MsgListener.UPLOAD_UPDATE : MsgListener.DOWNLOAD_UPDATE, fileData);
+			MsgBroadcaster.broadcastMsg(fileData.isUp ? MsgListener.UPLOAD_UPDATE : MsgListener.DOWNLOAD_UPDATE, fileData);
 		}
 		
 		if ((fileData.mode == SftpTransfer.MODE_STOPPED) || (fileData.mode == SftpTransfer.MODE_PAUSED))
@@ -44,10 +44,7 @@ public class SftpTransferMonitor implements SftpProgressMonitor {
 	public void end() {
 		if (fileData.fileSize <= fileData.fileSizeDone) {
 			fileData.mode = SftpTransfer.MODE_FINISHED;
-			
-			if (fileData.upload == SftpTransfer.TRANSFER_DOWN) {
-			}
 		}
-		MsgBroadcaster.broadcastMsg(fileData.upload ? MsgListener.UPLOAD_UPDATE : MsgListener.DOWNLOAD_UPDATE, fileData);
+		MsgBroadcaster.broadcastMsg(fileData.isUp ? MsgListener.UPLOAD_UPDATE : MsgListener.DOWNLOAD_UPDATE, fileData);
 	}
 }

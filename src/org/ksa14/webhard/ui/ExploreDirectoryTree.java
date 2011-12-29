@@ -236,6 +236,11 @@ public class ExploreDirectoryTree  extends JTree implements TreeSelectionListene
 				
 				if (type == MsgListener.DIRTREE_FAIL)
 					getInstance().updateTreeDone(new Vector<String>());
+				
+				if (type == MsgListener.DIRTREE_NEWDIR) {
+					updateTree();
+					addDirectory((String)arg);
+				}
 			}
 		});
 	}

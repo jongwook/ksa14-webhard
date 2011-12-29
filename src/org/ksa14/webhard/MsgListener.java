@@ -21,6 +21,7 @@ public interface MsgListener {
 	
 	public static final int DIRTREE_FAIL		= 31;
 	public static final int DIRTREE_DONE		= 32;
+	public static final int DIRTREE_NEWDIR	= 33;
 
 	public static final int FILELIST_FAIL		= 41;
 	public static final int FILELIST_DONE		= 42;

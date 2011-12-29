@@ -12,7 +12,6 @@ import java.util.Vector;
 
 import org.ksa14.webhard.MsgBroadcaster;
 import org.ksa14.webhard.MsgListener;
-import org.ksa14.webhard.ui.ExploreDirectoryTree;
 
 import com.google.gson.Gson;
 import com.jcraft.jsch.ChannelSftp;
@@ -190,8 +189,8 @@ public class SftpList {
 			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "폴더 생성에 실패했습니다");
 			return;
 		}
-		
-		ExploreDirectoryTree.getInstance().updateTree();
-		ExploreDirectoryTree.getInstance().addDirectory(dirname);
+
+		MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "폴더 생성 완료");
+		MsgBroadcaster.broadcastMsg(MsgListener.DIRTREE_NEWDIR, dirname);
 	}
 }
