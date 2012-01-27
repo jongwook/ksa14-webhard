@@ -70,11 +70,11 @@ public class FileUtility {
 		
 		m = (int)Math.floor(ltime / 60);
 		if (m > 0)
-			stime += m + "분 ";
+			stime += ((h > 0) ? String.format("%02d", m) : m) + "분 ";
 		ltime %= 60;
 		
 		s = (int)ltime;
-		stime += s + "초";
+		stime += ((m > 0) ? String.format("%02d", s) : s) + "초";
 		
 		return stime;
 	}

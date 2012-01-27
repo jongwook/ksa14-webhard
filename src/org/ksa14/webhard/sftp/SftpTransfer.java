@@ -26,7 +26,7 @@ public class SftpTransfer {
 	public static final int MODE_STOPPED = 4;
 	public static final int MODE_FINISHED = 5;
 	
-	public static final int MAX_TRANSFER = 5;
+	public static final int MAX_TRANSFER = 4;
 	
 	public static final int OVERWRITE_ASK = 0;
 	public static final int OVERWRITE_YES = 1;
@@ -233,6 +233,16 @@ public class SftpTransfer {
 	public static void upload(Vector<SftpTransferData> filelist) {
 		try {
 			int i;
+			
+			i = 0;
+			while (i < filelist.size()) {
+				SftpTransferData fileitem = filelist.elementAt(i);
+				
+				if (fileitem.isDir)
+					MsgBroadcaster.broadcastMsg(MsgListener.DIRTREE_NEWDIR, fileitem.fileName);
+				
+				i++;
+			}
 			
 			i = 0;
 			while (i < filelist.size()) {
