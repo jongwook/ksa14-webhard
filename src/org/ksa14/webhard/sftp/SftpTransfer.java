@@ -72,7 +72,7 @@ public class SftpTransfer {
 		}
 		
 		public String getDestTempName() {
-			return pathDest + (isUp? "/" : File.separator) + "_ksa14webhard_" + fileName;
+			return pathDest + (isUp ? "/" : File.separator) + "." + fileName + (isUp ? ".uploading" : ".downloading");
 		}
 	}
 	
@@ -108,12 +108,6 @@ public class SftpTransfer {
 			i = 0;
 			while (i < filelist.size()) {
 				final SftpTransferData fileitem = filelist.elementAt(i);
-				
-				if (fileitem.fileName.substring(0, 14).equals("_ksa14webhard_")) {
-					MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "\"" + fileitem.fileName + "\" 파일은 업로드 중인 파일이므로 다운로드할 수 없습니다.");
-					filelist.remove(i);
-					continue;
-				}
 				
 				File fileexist = new File(fileitem.getDestName());
 				File filetemp = new File(fileitem.getDestTempName());
@@ -204,7 +198,7 @@ public class SftpTransfer {
 	public static Thread getDownloadThread(final SftpTransferData fileitem, final boolean ow) {
 		return (new Thread() {
 			public void run() {
-				try {
+				try {					
 					ChannelSftp channel = SftpAdapter.getNewChannel();
 					File destfile = new File(fileitem.getDestTempName());
 					File destdir = destfile.getParentFile();
@@ -217,12 +211,11 @@ public class SftpTransfer {
 					BufferedOutputStream fileout = new BufferedOutputStream(new FileOutputStream(destfile, !ow));
 					BufferedInputStream sftpin = new BufferedInputStream(channel.get(fileitem.getSrcName(), new SftpTransferMonitor(fileitem), sftpskip));
 					
-					while (sftpin.read(inbuf, 0, 1024) >= 0) {
+					while (sftpin.read(inbuf, 0, 1024) >= 0)
 						fileout.write(inbuf);
-						fileout.flush();
-					}
+					fileout.flush();
 					
-					fileout.close();							
+					fileout.close();
 					if (fileitem.mode == MODE_FINISHED) {
 						File filetemp = new File(fileitem.getDestTempName());
 						filetemp.renameTo(new File(fileitem.getDestName()));
@@ -250,16 +243,15 @@ public class SftpTransfer {
 					File[] dirlist = fileup.listFiles();
 					for (File filechild : dirlist)
 						filelist.add(new SftpTransferData(fileup.getPath(), fileitem.getDestName(), filechild.getName(), filechild.isDirectory(), TRANSFER_UP));
+					
+					ChannelSftp channel = SftpAdapter.getMainChannel();
+					channel.mkdir(fileitem.getDestName());
+					
 					filelist.remove(i);
-					continue;
+				} else {
+					fileitem.thread = getUploadThread(fileitem, true);
+					i++;
 				}
-				
-				i++;
-			}
-			
-			i = 0;
-			while (i < filelist.size()) {
-				i++;
 			}
 		} catch (Exception e) {
 			MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "업로드에 실패했습니다");
@@ -270,5 +262,25 @@ public class SftpTransfer {
 
 		MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "업로드 시작");
 		MsgBroadcaster.broadcastMsg(MsgListener.UPLOAD_START, filelist);
+	}
+	
+	public static Thread getUploadThread(final SftpTransferData fileitem, final boolean ow) {
+		return (new Thread() {
+			public void run() {
+				try {
+					ChannelSftp channel = SftpAdapter.getNewChannel();
+					
+					channel.put(fileitem.getSrcName(), fileitem.getDestTempName(), new SftpTransferMonitor(fileitem), ow ? ChannelSftp.OVERWRITE : ChannelSftp.RESUME);
+					
+					if (fileitem.mode == MODE_FINISHED)
+						channel.rename(fileitem.getDestTempName(), fileitem.getDestName());
+				} catch (Exception e) {
+					MsgBroadcaster.broadcastMsg(MsgListener.STATUS_INFO, "업로드에 실패했습니다");
+					MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "업로드에 실패했습니다");
+					MsgBroadcaster.broadcastMsg(MsgListener.UPLOAD_FAIL, fileitem);
+				}
+				
+			}
+		});
 	}
 }

@@ -48,6 +48,11 @@ public class DownloadList extends TransferList implements MsgListener {
 				
 				if (type == MsgListener.DOWNLOAD_UPDATE)
 					updateList((SftpTransferData)arg);
+				
+				if (type == MsgListener.DOWNLOAD_FAIL) {
+					((SftpTransferData)arg).mode = SftpTransfer.MODE_STOPPED;
+					updateList((SftpTransferData)arg);
+				}
 			}
 		});
 	}

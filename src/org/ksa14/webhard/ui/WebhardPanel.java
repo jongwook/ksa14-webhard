@@ -197,34 +197,33 @@ public class WebhardPanel extends JPanel implements MsgListener {
 				}
 				
 				if (type == MsgListener.UPLOAD_CLICK) {
-					JFileChooser openfile = new JFileChooser();
-					openfile.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-					openfile.setMultiSelectionEnabled(true);
-					openfile.setDialogTitle("업로드할 파일/폴더");
-					if (openfile.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						final Vector<SftpTransferData> filelist = new Vector<SftpTransferData>();
-						File[] filesup = openfile.getSelectedFiles();
-						String pathsrc = filesup[0].getParent();
-						String pathdest = dirExplore.getPath();
-						if (pathsrc.charAt(pathsrc.length() - 1) == File.separatorChar)
-							pathsrc = pathsrc.substring(0, pathsrc.length() - 1);
-						if (pathsrc.equals("/")) {
-							MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "최상위 폴더에는 업로드 할 수 없습니다.");
-							return;
-						}
-						
-						
-						for (File upf : filesup) {
-							String filename = upf.getName();
-							boolean isdir = upf.isDirectory();
-							filelist.add(new SftpTransferData(pathsrc, pathdest, filename, isdir, SftpTransfer.TRANSFER_UP));
-						}
-						
-						new Thread() {
-							public void run() {
-								SftpTransfer.upload(filelist);
+					if (dirExplore.getPath().equals("/")) {
+						MsgBroadcaster.broadcastMsg(MsgListener.STATUS_MESSAGE, "최상위 폴더에는 업로드 할 수 없습니다.");
+					} else {
+						JFileChooser openfile = new JFileChooser();
+						openfile.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+						openfile.setMultiSelectionEnabled(true);
+						openfile.setDialogTitle("업로드할 파일/폴더");
+						if (openfile.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+							final Vector<SftpTransferData> filelist = new Vector<SftpTransferData>();
+							File[] filesup = openfile.getSelectedFiles();
+							String pathsrc = filesup[0].getParent();
+							String pathdest = dirExplore.getPath();
+							if (pathsrc.charAt(pathsrc.length() - 1) == File.separatorChar)
+								pathsrc = pathsrc.substring(0, pathsrc.length() - 1);
+							
+							for (File upf : filesup) {
+								String filename = upf.getName();
+								boolean isdir = upf.isDirectory();
+								filelist.add(new SftpTransferData(pathsrc, pathdest, filename, isdir, SftpTransfer.TRANSFER_UP));
 							}
-						}.start();
+							
+							new Thread() {
+								public void run() {
+									SftpTransfer.upload(filelist);
+								}
+							}.start();
+						}
 					}
 				}
 			}

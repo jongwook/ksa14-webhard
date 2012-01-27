@@ -8,6 +8,7 @@ import javax.swing.table.DefaultTableModel;
 
 import org.ksa14.webhard.MsgBroadcaster;
 import org.ksa14.webhard.MsgListener;
+import org.ksa14.webhard.sftp.SftpTransfer;
 import org.ksa14.webhard.sftp.SftpTransfer.SftpTransferData;
 
 public class UploadList extends TransferList implements MsgListener {
@@ -40,6 +41,11 @@ public class UploadList extends TransferList implements MsgListener {
 				
 				if (type == MsgListener.UPLOAD_UPDATE)
 					updateList((SftpTransferData)arg);
+				
+				if (type == MsgListener.DOWNLOAD_FAIL) {
+					((SftpTransferData)arg).mode = SftpTransfer.MODE_STOPPED;
+					updateList((SftpTransferData)arg);
+				}
 			}
 		});
 	}
